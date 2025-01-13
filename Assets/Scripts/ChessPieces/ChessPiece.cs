@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using UnityEditor.Timeline;
 using UnityEngine;
 
 public enum ChessPieceType
@@ -19,6 +20,8 @@ public class ChessPiece : MonoBehaviour
     private bool clicked = false;
     protected List<Vector2Int> desiredMove = new List<Vector2Int>();
     protected Vector3 desiredPosition = Vector3.one;
+    protected Vector3 scale;
+    protected Vector3 originalScale;
 
     public bool IsClicked { get { return clicked; } }
     public List<Vector2Int> DesiredMove
@@ -28,9 +31,15 @@ public class ChessPiece : MonoBehaviour
             return desiredMove;
         }
     }
+    private void Awake()
+    {
+        originalScale = transform.localScale * 1.3f;
+        scale = originalScale;
+    }
     private void Update()
     {
         transform.position = Vector3.Lerp(transform.position, desiredPosition, Time.deltaTime * 10f);
+        transform.localScale = Vector3.Lerp(transform.localScale, scale, Time.deltaTime * 10f);
     }
     public virtual void OnClicked()
     {
@@ -56,30 +65,6 @@ public class ChessPiece : MonoBehaviour
             case ChessPieceType.Rook:
                 GetHorizontalPath(x, y);
                 GetVerticalPath(y, x);
-                //for(int x = this.x + 1; x <= 7; x++)
-                //{
-                //    if (!CanMove(x, this.y, team)) break;
-                //    desiredMove.Add(new Vector2Int(x, this.y));
-                //    if (CollideOpponent(x, this.y, team)) break;
-                //}
-                //for (int x = this.x - 1; x >= 0; x--)
-                //{
-                //    if (!CanMove(x, this.y, team)) break;
-                //    desiredMove.Add(new Vector2Int(x, this.y));
-                //    if (CollideOpponent(x, this.y, team)) break;
-                //}
-                //for (int y = this.y + 1; y <= 7; y++)
-                //{
-                //    if (!CanMove(this.x, y, team)) break;
-                //    desiredMove.Add(new Vector2Int(this.x, y));
-                //    if (CollideOpponent(this.x, y, team)) break;
-                //}
-                //for (int y = this.y - 1; y >= 0; y--)
-                //{
-                //    if (!CanMove(this.x, y, team)) break;
-                //    desiredMove.Add(new Vector2Int(this.x, y));
-                //    if (CollideOpponent(this.x, y, team)) break;
-                //}
                 break;
             case ChessPieceType.Knight:
                 movePos = new Vector2Int(this.x + 1, this.y + 2);
@@ -124,30 +109,7 @@ public class ChessPiece : MonoBehaviour
                 }
                 break;
             case ChessPieceType.Bishop:
-                for (int x = this.x + 1, y = this.y + 1; x <= 7 && y <= 7; x++, y++)
-                {
-                    if (!CanMove(x, y, team)) break;
-                    desiredMove.Add(new Vector2Int(x, y));
-                    if (CollideOpponent(x, y, team)) break;
-                }
-                for (int x = this.x - 1, y = this.y + 1; x >= 0 && y <= 7; x--, y++)
-                {
-                    if (!CanMove(x, y, team)) break;
-                    desiredMove.Add(new Vector2Int(x, y));
-                    if (CollideOpponent(x, y, team)) break;
-                }
-                for (int y = this.y - 1, x = this.x + 1; y >= 0 && x <= 7; y--, x++)
-                {
-                    if (!CanMove(x, y, team)) break;
-                    desiredMove.Add(new Vector2Int(x, y));
-                    if (CollideOpponent(x, y, team)) break;
-                }
-                for (int y = this.y - 1, x = this.x - 1; y >= 0 && x >= 0; y--, x--)
-                {
-                    if (!CanMove(x, y, team)) break;
-                    desiredMove.Add(new Vector2Int(x, y));
-                    if (CollideOpponent(x, y, team)) break;
-                }
+                GetAllDiagnosePaths();
                 break;
             case ChessPieceType.King:
                 int[,] directions = {
@@ -166,7 +128,10 @@ public class ChessPiece : MonoBehaviour
                 }
                 break;
             case ChessPieceType.Queen:
-
+                GetHorizontalPath(x, y);
+                GetVerticalPath(y, x);
+                GetAllDiagnosePaths();
+                break;
             default:
                 break;
         }
@@ -181,32 +146,69 @@ public class ChessPiece : MonoBehaviour
         } 
             
     }
+    public void SetScale(float scale, bool force = false)
+    {
+        this.scale = originalScale * scale;
+        if (force)
+        {
+            transform.localScale = this.scale;
+        }
+    }
     protected void GetHorizontalPath(int dynamicX, int staticY)
     {
-        for (int i = dynamicX + 1, j = dynamicX - 1; i <= 7 && j >= 0; i++, j--)
+        for (int x = dynamicX + 1; x <= 7; x++)
         {
-            // Right dir
-            if (!CanMove(i, staticY, team)) break;
-            desiredMove.Add(new Vector2Int(i, staticY));
-            if (CollideOpponent(i, staticY, team)) break;
-            // Left dir
-            if (!CanMove(j, staticY, team)) break;
-            desiredMove.Add(new Vector2Int(j, staticY));
-            if (CollideOpponent(j, staticY, team)) break;
+            if (!CanMove(x, staticY, team)) break;
+            desiredMove.Add(new Vector2Int(x, staticY));
+            if (CollideOpponent(x, staticY, team)) break;
+        }
+        for (int x = dynamicX - 1; x >= 0; x--)
+        {
+            if (!CanMove(x, staticY, team)) break;
+            desiredMove.Add(new Vector2Int(x, staticY));
+            if (CollideOpponent(x, staticY, team)) break;
         }
     }
     protected void GetVerticalPath(int dynamicY, int staticX)
     {
-        for (int i = dynamicY + 1, j = dynamicY - 1; i <= 7 && j >= 0; i++, j--)
+        for (int y = dynamicY + 1; y <= 7; y++)
         {
-            // Right dir
-            if (!CanMove(staticX, i, team)) break;
-            desiredMove.Add(new Vector2Int(staticX, i));
-            if (CollideOpponent(staticX, i, team)) break;
-            // Left dir
-            if (!CanMove(staticX, j, team)) break;
-            desiredMove.Add(new Vector2Int(staticX, j));
-            if (CollideOpponent(staticX, j, team)) break;
+            if (!CanMove(staticX, y, team)) break;
+            desiredMove.Add(new Vector2Int(staticX, y));
+            if (CollideOpponent(staticX, y, team)) break;
+        }
+        for (int y = dynamicY - 1; y >= 0; y--)
+        {
+            if (!CanMove(staticX, y, team)) break;
+            desiredMove.Add(new Vector2Int(staticX, y));
+            if (CollideOpponent(staticX, y, team)) break;
+        }
+    }
+    protected void GetAllDiagnosePaths()
+    {
+        for (int x = this.x + 1, y = this.y + 1; x <= 7 && y <= 7; x++, y++)
+        {
+            if (!CanMove(x, y, team)) break;
+            desiredMove.Add(new Vector2Int(x, y));
+            if (CollideOpponent(x, y, team)) break;
+        }
+        for (int x = this.x - 1, y = this.y + 1; x >= 0 && y <= 7; x--, y++)
+        {
+            if (!CanMove(x, y, team)) break;
+            desiredMove.Add(new Vector2Int(x, y));
+            if (CollideOpponent(x, y, team)) break;
+        }
+        for (int y = this.y - 1, x = this.x + 1; y >= 0 && x <= 7; y--, x++)
+        {
+            if (!CanMove(x, y, team)) break;
+            desiredMove.Add(new Vector2Int(x, y));
+            if (CollideOpponent(x, y, team)) break;
+        }
+        for (int y = this.y - 1, x = this.x - 1; y >= 0 && x >= 0; y--, x--)
+        {
+            if (!CanMove(x, y, team)) break;
+            desiredMove.Add(new Vector2Int(x, y));
+            if (CollideOpponent(x, y, team)) break;
         }
     }
     protected bool CanMove(int x, int y, int team)

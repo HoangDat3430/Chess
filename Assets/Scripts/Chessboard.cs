@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Rendering.UI;
 
 public class Chessboard : MonoBehaviour
 {
@@ -32,6 +33,8 @@ public class Chessboard : MonoBehaviour
     private const int TILE_COUNT_Y = 8;
     private GameObject[,] chessBoard;
     private ChessPiece[,] chessPieces;
+    private List<ChessPiece> deathBlack = new List<ChessPiece>();
+    private List<ChessPiece> deathWhite = new List<ChessPiece>();
     private Camera curCamera;
     private Vector2Int curHover;
     private Vector3 bounds;
@@ -89,6 +92,22 @@ public class Chessboard : MonoBehaviour
             if (Input.GetMouseButtonUp(0))
             {
                 Vector2Int hitPosition = MousePositionToBoardIndex(info.transform.gameObject);
+                ChessPiece cp = chessPieces[hitPosition.x, hitPosition.y];
+                if (cp != null)
+                {
+                    if (cp.team == 0)
+                    {
+                        deathWhite.Add(cp);
+                        cp.SetPosition(GetCenterTile(0, 7) + new Vector3(0, yOffset, deathWhite.Count));
+                        cp.SetScale(0.5f);
+                    }
+                    else
+                    {
+                        deathBlack.Add(cp);
+                        cp.SetPosition(GetCenterTile(7, 0) + new Vector3(0, yOffset, deathBlack.Count));
+                        cp.SetScale(0.5f);
+                    }
+                }
                 chessPieces[hitPosition.x, hitPosition.y] = chessPieces[curSelected.x, curSelected.y];
                 chessPieces[curSelected.x, curSelected.y] = null;
                 ChessPiecePositioning(hitPosition.x, hitPosition.y);
@@ -176,7 +195,7 @@ public class Chessboard : MonoBehaviour
     {
         GameObject chess = Instantiate(prefabs[(int)type - 1]);
         chess.transform.parent = transform;
-        chess.GetComponent<MeshRenderer>().material = teamMaterials[team];
+        chess.GetComponentInChildren<MeshRenderer>().material = teamMaterials[team];
         ChessPiece chessPiece = chess.AddComponent<ChessPiece>();
         chessPiece.type = type;
         chessPiece.team = team;
@@ -223,7 +242,7 @@ public class Chessboard : MonoBehaviour
     }
     private Vector3 GetCenterTile(int x, int y)
     {
-        return new Vector3(x * tileSize, chessPieces[x, y].type == ChessPieceType.Pawn ? yOffset + 1 : yOffset, y * tileSize) - bounds + new Vector3(tileSize / 2, 0, tileSize / 2);
+        return new Vector3(x * tileSize, yOffset, y * tileSize) - bounds + new Vector3(tileSize / 2, 0, tileSize / 2);
     }
     public void DisplayHint()
     {
