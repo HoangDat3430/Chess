@@ -24,6 +24,8 @@ public class Chessboard : MonoBehaviour
     [SerializeField] private float tileSize = 0.1f;
     [SerializeField] private float yOffset = 0.01f;
     [SerializeField] private Vector3 boardCenter = Vector3.zero;
+    [SerializeField] private float deathSpace = 3f;
+    [SerializeField] private float deathScale = 0.8f;
 
     [Header("Prefabs and Materials")]
     [SerializeField] private GameObject[] prefabs;
@@ -84,7 +86,7 @@ public class Chessboard : MonoBehaviour
         }
         if (Physics.Raycast(ray, out info, 100, LayerMask.GetMask("Desired")))
         {
-            if(curHover != -Vector2Int.one)
+            if (curHover != -Vector2Int.one)
             {
                 SetTransparentTile(curHover.x, curHover.y);
                 curHover = -Vector2Int.one;
@@ -97,16 +99,20 @@ public class Chessboard : MonoBehaviour
                 {
                     if (cp.team == 0)
                     {
+                        cp.SetPosition(GetCenterTile(0, 7) - new Vector3(2 * tileSize, 2, deathWhite.Count * deathSpace - tileSize));
                         deathWhite.Add(cp);
-                        cp.SetPosition(GetCenterTile(0, 7) + new Vector3(0, yOffset, deathWhite.Count));
-                        cp.SetScale(0.5f);
+                        cp.SetScale(deathScale);
                     }
                     else
                     {
+                        cp.SetPosition(GetCenterTile(7, 0) + new Vector3(2 * tileSize, -2, deathBlack.Count * deathSpace - tileSize));
                         deathBlack.Add(cp);
-                        cp.SetPosition(GetCenterTile(7, 0) + new Vector3(0, yOffset, deathBlack.Count));
-                        cp.SetScale(0.5f);
+                        cp.SetScale(deathScale);
                     }
+                    if(cp.type == ChessPieceType.King)
+                    {
+                        GameManager.Instance.TheKingKilled(true);
+                    }    
                 }
                 chessPieces[hitPosition.x, hitPosition.y] = chessPieces[curSelected.x, curSelected.y];
                 chessPieces[curSelected.x, curSelected.y] = null;
@@ -126,7 +132,7 @@ public class Chessboard : MonoBehaviour
     private void GenerateAllTiles(float tileSize, int tileCountX, int tileCountY)
     {
         yOffset += transform.position.y;
-        bounds = new Vector3((tileCountX/2) * tileSize, 0, (tileCountY/2) * tileSize) + boardCenter;
+        bounds = new Vector3(tileCountX/2 * tileSize, 0, tileCountY/2 * tileSize) + boardCenter;
         chessBoard = new GameObject[tileCountX, tileCountY];
         for(int x = 0; x < tileCountX; x++){
             for(int y = 0; y < tileCountY; y++){
@@ -162,7 +168,10 @@ public class Chessboard : MonoBehaviour
     }
     private void SpawnAllChessPieces()
     {
-        chessPieces = new ChessPiece[TILE_COUNT_X, TILE_COUNT_Y];
+        if (chessPieces == null)
+        {
+            chessPieces = new ChessPiece[TILE_COUNT_X, TILE_COUNT_Y];
+        }
         // white team
         chessPieces[0, 0] = SpawnSinglePiece(ChessPieceType.Rook, 0);
         chessPieces[1, 0] = SpawnSinglePiece(ChessPieceType.Knight, 0);
@@ -196,7 +205,7 @@ public class Chessboard : MonoBehaviour
         GameObject chess = Instantiate(prefabs[(int)type - 1]);
         chess.transform.parent = transform;
         chess.GetComponentInChildren<MeshRenderer>().material = teamMaterials[team];
-        ChessPiece chessPiece = chess.AddComponent<ChessPiece>();
+        ChessPiece chessPiece = chess.GetComponent<ChessPiece>();
         chessPiece.type = type;
         chessPiece.team = team;
         return chessPiece;
@@ -287,6 +296,11 @@ public class Chessboard : MonoBehaviour
     public bool IsValidPos(int x, int y)
     {
         return x >= 0 && x <= 7 && y >= 0 && y <= 7;
+    }
+    public void ResetGame()
+    {
+        chessPieces = null;
+        SpawnAllChessPieces();
     }
     private void ClearAllTiles()
     {

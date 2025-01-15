@@ -1,4 +1,5 @@
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEditor.Timeline;
 using UnityEngine;
 
@@ -31,12 +32,12 @@ public class ChessPiece : MonoBehaviour
             return desiredMove;
         }
     }
-    private void Awake()
+    protected virtual void Awake()
     {
-        originalScale = transform.localScale * 1.3f;
-        scale = originalScale;
+        originalScale = transform.localScale;
+        SetScale(1.3f, true);
     }
-    private void Update()
+    protected virtual void Update()
     {
         transform.position = Vector3.Lerp(transform.position, desiredPosition, Time.deltaTime * 10f);
         transform.localScale = Vector3.Lerp(transform.localScale, scale, Time.deltaTime * 10f);
@@ -45,97 +46,6 @@ public class ChessPiece : MonoBehaviour
     {
         Debug.LogError(string.Format("Selected {0} of team {1} at X:{2}, Y:{3}", type, team, x, y));
         desiredMove.Clear();
-        switch (type)
-        {
-            case ChessPieceType.Pawn:
-                Vector2Int movePos = new Vector2Int(this.x, this.y + (team == 0 ? 1 : -1));
-                if (CanMove(movePos.x, movePos.y, team) && !CollideOpponent(movePos.x, movePos.y, team))
-                {
-                    desiredMove.Add(new Vector2Int(movePos.x, movePos.y));
-                }
-                if (CanMove(movePos.x + 1, movePos.y, team) && CollideOpponent(movePos.x + 1, movePos.y, team))
-                {
-                    desiredMove.Add(new Vector2Int(movePos.x + 1, movePos.y));
-                }
-                if (CanMove(movePos.x - 1, movePos.y, team) && CollideOpponent(movePos.x - 1, movePos.y, team))
-                {
-                    desiredMove.Add(new Vector2Int(movePos.x - 1, movePos.y));
-                }
-                break;
-            case ChessPieceType.Rook:
-                GetHorizontalPath(x, y);
-                GetVerticalPath(y, x);
-                break;
-            case ChessPieceType.Knight:
-                movePos = new Vector2Int(this.x + 1, this.y + 2);
-                if (CanMove(movePos.x, movePos.y, team))
-                {
-                    desiredMove.Add(movePos);
-                }
-                movePos = new Vector2Int(this.x + 1, this.y - 2);
-                if (CanMove(movePos.x, movePos.y, team))
-                {
-                    desiredMove.Add(movePos);
-                }
-                movePos = new Vector2Int(this.x - 1, this.y + 2);
-                if (CanMove(movePos.x, movePos.y, team))
-                {
-                    desiredMove.Add(movePos);
-                }
-                movePos = new Vector2Int(this.x - 1, this.y - 2);
-                if (CanMove(movePos.x, movePos.y, team))
-                {
-                    desiredMove.Add(movePos);
-                }
-                movePos = new Vector2Int(this.x + 2, this.y + 1);
-                if (CanMove(movePos.x, movePos.y, team))
-                {
-                    desiredMove.Add(movePos);
-                }
-                movePos = new Vector2Int(this.x + 2, this.y - 1);
-                if (CanMove(movePos.x, movePos.y, team))
-                {
-                    desiredMove.Add(movePos);
-                }
-                movePos = new Vector2Int(this.x -2, this.y + 1);
-                if (CanMove(movePos.x, movePos.y, team))
-                {
-                    desiredMove.Add(movePos);
-                }
-                movePos = new Vector2Int(this.x - 2, this.y - 1);
-                if (CanMove(movePos.x, movePos.y, team))
-                {
-                    desiredMove.Add(movePos);
-                }
-                break;
-            case ChessPieceType.Bishop:
-                GetAllDiagnosePaths();
-                break;
-            case ChessPieceType.King:
-                int[,] directions = {
-                    { -1,  0 }, { 1,  0 },  // Up, Down
-                    { 0, -1 }, { 0,  1 },  // Left, Right
-                    { -1, -1 }, { -1,  1 }, // Top-Left, Top-Right
-                    { 1, -1 }, { 1,  1 }   // Bottom-Left, Bottom-Right
-                };
-                for (int i = 0; i < directions.Length/2; i++)
-                {
-                    movePos = new Vector2Int(x + directions[i, 0], y + directions[i, 1]);
-                    if(CanMove(movePos.x, movePos.y, team))
-                    {
-                        desiredMove.Add(movePos);
-                    }
-                }
-                break;
-            case ChessPieceType.Queen:
-                GetHorizontalPath(x, y);
-                GetVerticalPath(y, x);
-                GetAllDiagnosePaths();
-                break;
-            default:
-                break;
-        }
-        Debug.LogError(desiredMove.Count);
     }
     public void SetPosition(Vector3 position, bool force = false)
     {
