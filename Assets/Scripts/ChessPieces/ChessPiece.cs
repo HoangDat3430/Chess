@@ -17,6 +17,7 @@ public class ChessPiece : MonoBehaviour
 {
     public ChessPieceType type;
     public int x, y;
+    public Vector2Int InitialPos = -Vector2Int.one;
     public int team;
     private bool clicked = false;
     protected List<Vector2Int> desiredMove = new List<Vector2Int>();
@@ -54,7 +55,10 @@ public class ChessPiece : MonoBehaviour
         {
             transform.position = desiredPosition;
         } 
-            
+        if(InitialPos == -Vector2Int.one)
+        {
+            SetInitPos(new Vector2Int(x, y));
+        } 
     }
     public void SetScale(float scale, bool force = false)
     {
@@ -120,6 +124,15 @@ public class ChessPiece : MonoBehaviour
             desiredMove.Add(new Vector2Int(x, y));
             if (CollideOpponent(x, y, team)) break;
         }
+    }
+    public void SetInitPos(Vector2Int pos)
+    {
+        InitialPos = pos;
+    }
+    public void ResetToInitialPos()
+    {
+        SetPosition(Chessboard.Instance.GetCenterTile(InitialPos.x, InitialPos.y));
+        SetScale(1.3f);    
     }
     protected bool CanMove(int x, int y, int team)
     {
