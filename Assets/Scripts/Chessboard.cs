@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Rendering.UI;
+using UnityEngine.UIElements;
 
 public class Chessboard : MonoBehaviour
 {
@@ -116,7 +117,6 @@ public class Chessboard : MonoBehaviour
                     if(cp.type == ChessPieceType.King)
                     {
                         ShowResult(cp.team);
-                        
                     }    
                 }
                 chessPieces[hitPosition.x, hitPosition.y] = chessPieces[curSelected.x, curSelected.y];
@@ -317,7 +317,7 @@ public class Chessboard : MonoBehaviour
             {
                 if (chessPieces[x, y] != null)
                 {
-                    chessPieces[x, y].ResetToInitialPos();
+                    PostioningChessPieceToInitialPosition(chessPieces[x, y]);
                 }
             }
         }
@@ -326,8 +326,18 @@ public class Chessboard : MonoBehaviour
     {
         for (int i = 0; i < team.Count; i++)
         {
-            team[i].ResetToInitialPos();
+            PostioningChessPieceToInitialPosition(team[i]);
         }
+    }
+    public void PostioningChessPieceToInitialPosition(ChessPiece cp)
+    {
+        if(chessPieces[cp.x, cp.y] != null)
+        {
+            chessPieces[cp.x, cp.y] = null;
+        }
+        chessPieces[cp.InitialPos.x, cp.InitialPos.y] = cp;
+        ChessPiecePositioning(cp.InitialPos.x, cp.InitialPos.y);
+        cp.SetScale(1.3f);
     }
     private void ShowResult(int teamLose)
     {

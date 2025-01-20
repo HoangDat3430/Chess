@@ -129,11 +129,12 @@ public class ChessPiece : MonoBehaviour
     {
         InitialPos = pos;
     }
-    public void ResetToInitialPos()
-    {
-        SetPosition(Chessboard.Instance.GetCenterTile(InitialPos.x, InitialPos.y));
-        SetScale(1.3f);    
-    }
+    // public void ResetToInitialPos()
+    // {
+    //     x = InitialPos.x;
+    //     y = InitialPos.y;
+    //     SetScale(1.3f);    
+    // }
     protected bool CanMove(int x, int y, int team)
     {
         return Chessboard.Instance.CanMove(x, y, team);
