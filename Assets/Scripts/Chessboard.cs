@@ -1,9 +1,23 @@
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using UnityEngine;
 using UnityEngine.Rendering.UI;
 using UnityEngine.UIElements;
 
+public enum SpecialMove
+{
+    None,
+    EnPassant,
+    Castling,
+    Promotion
+}
+public enum Layer
+{
+    Tile,
+    Hover,
+    Desired
+}
 public class Chessboard : MonoBehaviour
 {
     private static Chessboard _instance;
@@ -20,9 +34,7 @@ public class Chessboard : MonoBehaviour
         }
     }
     [Header("Assets stuff")]
-    [SerializeField] private Material tileMaterial;
-    [SerializeField] private Material hoverMaterial;
-    [SerializeField] private Material desiredMaterial;
+    [SerializeField] private Material[] tileMaterials;
     [SerializeField] private float tileSize = 0.1f;
     [SerializeField] private float yOffset = 0.01f;
     [SerializeField] private Vector3 boardCenter = Vector3.zero;
@@ -45,6 +57,8 @@ public class Chessboard : MonoBehaviour
     private Vector3 bounds;
     private ChessPiece curSelected;
     private bool turn;
+    private SpecialMove specialMove = SpecialMove.None;
+    private List<Vector2Int[]> moveList = new List<Vector2Int[]>();
 
     //for test
     private float curSizeTile;
@@ -72,10 +86,10 @@ public class Chessboard : MonoBehaviour
             {
                 if (curHover != -Vector2Int.one)
                 {
-                    SetTransparentTile(curHover.x, curHover.y);
+                    SetTileLayer(curHover.x, curHover.y, Layer.Tile);
                 }
                 curHover = hitPosition;
-                SetHoverTile(curHover.x, curHover.y);
+                SetTileLayer(curHover.x, curHover.y, Layer.Hover);
             }
             if (Input.GetMouseButtonUp(0))
             {
@@ -93,7 +107,7 @@ public class Chessboard : MonoBehaviour
         {
             if (curHover != -Vector2Int.one)
             {
-                SetTransparentTile(curHover.x, curHover.y);
+                SetTileLayer(curHover.x, curHover.y, Layer.Tile);
                 curHover = -Vector2Int.one;
             }
             if (Input.GetMouseButtonUp(0))
@@ -119,6 +133,7 @@ public class Chessboard : MonoBehaviour
                         ShowResult(cp.team);
                     }    
                 }
+                moveList.Add(new Vector2Int[] { new Vector2Int(curSelected.x, curSelected.y), hitPosition });
                 chessPieces[hitPosition.x, hitPosition.y] = chessPieces[curSelected.x, curSelected.y];
                 chessPieces[curSelected.x, curSelected.y] = null;
                 ChessPiecePositioning(hitPosition.x, hitPosition.y);
@@ -126,6 +141,7 @@ public class Chessboard : MonoBehaviour
                 turn = !turn;
             }
         }
+        // for test
         if (curSizeTile != tileSize || curYOffset != yOffset)
         {
             curSizeTile = tileSize;
@@ -152,7 +168,7 @@ public class Chessboard : MonoBehaviour
 
         Mesh mesh = new Mesh();
         tile.AddComponent<MeshFilter>().mesh = mesh;
-        tile.AddComponent<MeshRenderer>().material = tileMaterial;
+        tile.AddComponent<MeshRenderer>().material = tileMaterials[0];
 
         Vector3[] vertices = new Vector3[4];
         vertices[0] = new Vector3(x * tileSize, yOffset, y * tileSize) - bounds;
@@ -264,7 +280,7 @@ public class Chessboard : MonoBehaviour
         List<Vector2Int> moves = curSelected.DesiredMove;
         for(int i = 0; i < moves.Count; i++)
         {
-            SetDesiredTile(moves[i].x, moves[i].y);
+            SetTileLayer(moves[i].x, moves[i].y, Layer.Desired);
         }
     }
     private void ClearHint()
@@ -273,23 +289,13 @@ public class Chessboard : MonoBehaviour
         List<Vector2Int> moves = curSelected.DesiredMove;
         for (int i = 0; i < moves.Count; i++)
         {
-            SetTransparentTile(moves[i].x, moves[i].y);
+            SetTileLayer(moves[i].x, moves[i].y, Layer.Tile);
         }
     }
-    private void SetTransparentTile(int x, int y)
+    private void SetTileLayer(int x, int y, Layer layer)
     {
-        chessBoard[x, y].layer = LayerMask.NameToLayer("Tile");
-        chessBoard[x, y].GetComponent<MeshRenderer>().material = tileMaterial;
-    }
-    private void SetHoverTile(int x, int y)
-    {
-        chessBoard[x, y].layer = LayerMask.NameToLayer("Hover");
-        chessBoard[x, y].GetComponent<MeshRenderer>().material = hoverMaterial;
-    }
-    private void SetDesiredTile(int x, int y)
-    {
-        chessBoard[x, y].layer = LayerMask.NameToLayer("Desired");
-        chessBoard[x, y].GetComponent<MeshRenderer>().material = desiredMaterial;
+        chessBoard[x, y].layer = LayerMask.NameToLayer(layer.ToString());
+        chessBoard[x, y].GetComponent<MeshRenderer>().material = tileMaterials[(int)layer];
     }
     public bool CanMove(int x, int y, int team)
     {
@@ -308,6 +314,8 @@ public class Chessboard : MonoBehaviour
         ResetChessPiecesOnBoard();
         ResetChessPiecesDeath(deathBlack);
         ResetChessPiecesDeath(deathWhite);
+        moveList.Clear();
+        specialMove = SpecialMove.None;
     }
     private void ResetChessPiecesOnBoard()
     {

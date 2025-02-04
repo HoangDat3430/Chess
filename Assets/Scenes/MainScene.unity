@@ -916,9 +916,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f33efe156ad88ff45a599f8cd48db8f9, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  tileMaterial: {fileID: 2100000, guid: a1a53397417763b439296e388d6a3c67, type: 2}
-  hoverMaterial: {fileID: 2100000, guid: 7533c8c032638b94eacc1a2d3ea7c57a, type: 2}
-  desiredMaterial: {fileID: 2100000, guid: 400d1f6eaea910d4fa3f075543c7d685, type: 2}
+  tileMaterials:
+  - {fileID: 2100000, guid: a1a53397417763b439296e388d6a3c67, type: 2}
+  - {fileID: 2100000, guid: 7533c8c032638b94eacc1a2d3ea7c57a, type: 2}
+  - {fileID: 2100000, guid: 400d1f6eaea910d4fa3f075543c7d685, type: 2}
   tileSize: 6
   yOffset: 0.01
   boardCenter: {x: 0, y: 0, z: 0}
