@@ -60,6 +60,7 @@ public class Chessboard : MonoBehaviour
     private SpecialMove specialMove = SpecialMove.None;
     private List<Vector2Int[]> moveList = new List<Vector2Int[]>();
 
+    public List<Vector2Int[]> MoveList { get { return moveList; } }
     //for test
     private float curSizeTile;
     private float curYOffset;
@@ -113,30 +114,7 @@ public class Chessboard : MonoBehaviour
             if (Input.GetMouseButtonUp(0))
             {
                 Vector2Int hitPosition = MousePositionToBoardIndex(info.transform.gameObject);
-                ChessPiece cp = chessPieces[hitPosition.x, hitPosition.y];
-                if (cp != null)
-                {
-                    if (cp.team == 0)
-                    {
-                        cp.SetPosition(GetCenterTile(0, 7) - new Vector3(2 * tileSize, 2, deathWhite.Count * deathSpace - tileSize));
-                        deathWhite.Add(cp);
-                        cp.SetScale(deathScale);
-                    }
-                    else
-                    {
-                        cp.SetPosition(GetCenterTile(7, 0) + new Vector3(2 * tileSize, -2, deathBlack.Count * deathSpace - tileSize));
-                        deathBlack.Add(cp);
-                        cp.SetScale(deathScale);
-                    }
-                    if(cp.type == ChessPieceType.King)
-                    {
-                        ShowResult(cp.team);
-                    }    
-                }
-                moveList.Add(new Vector2Int[] { new Vector2Int(curSelected.x, curSelected.y), hitPosition });
-                chessPieces[hitPosition.x, hitPosition.y] = chessPieces[curSelected.x, curSelected.y];
-                chessPieces[curSelected.x, curSelected.y] = null;
-                ChessPiecePositioning(hitPosition.x, hitPosition.y);
+                MoveTo(hitPosition);
                 ClearHint();
                 turn = !turn;
             }
@@ -151,6 +129,7 @@ public class Chessboard : MonoBehaviour
             //PositioningAllChessPieces();
         }
     }
+    // Initialize the chessboard
     private void GenerateAllTiles(float tileSize, int tileCountX, int tileCountY)
     {
         yOffset += transform.position.y;
@@ -232,6 +211,58 @@ public class Chessboard : MonoBehaviour
         chessPiece.team = team;
         return chessPiece;
     }
+    // Special moves
+    private void ProcessingSpecialMove()
+    {
+        Debug.LogError(specialMove);
+        switch (specialMove)
+        {
+            case SpecialMove.EnPassant:
+                Vector2Int[] pawnCatchPos = moveList[moveList.Count - 2];
+                EliminateChessPiece(chessPieces[pawnCatchPos[1].x, pawnCatchPos[1].y]);
+                break;
+            case SpecialMove.Castling:
+                break;
+            case SpecialMove.Promotion:
+                turn = !turn;
+                break;
+        }
+        specialMove = SpecialMove.None;
+    }
+    // Chesspiece positioning
+    private void MoveTo(Vector2Int postion)
+    {
+        ChessPiece cp = chessPieces[postion.x, postion.y];
+        if (cp != null)
+        {
+            EliminateChessPiece(cp);
+        }
+        moveList.Add(new Vector2Int[] { new Vector2Int(curSelected.x, curSelected.y), postion });
+        chessPieces[postion.x, postion.y] = chessPieces[curSelected.x, curSelected.y];
+        chessPieces[curSelected.x, curSelected.y] = null;
+        ChessPiecePositioning(postion.x, postion.y);
+        specialMove = chessPieces[postion.x, postion.y].GetSpecialMove();
+        ProcessingSpecialMove();
+    }    
+    private void EliminateChessPiece(ChessPiece cp)
+    {
+        if (cp.team == 0)
+        {
+            cp.SetPosition(GetCenterTile(0, 7) - new Vector3(2 * tileSize, 2, deathWhite.Count * deathSpace - tileSize));
+            deathWhite.Add(cp);
+            cp.SetScale(deathScale);
+        }
+        else
+        {
+            cp.SetPosition(GetCenterTile(7, 0) + new Vector3(2 * tileSize, -2, deathBlack.Count * deathSpace - tileSize));
+            deathBlack.Add(cp);
+            cp.SetScale(deathScale);
+        }
+        if (cp.type == ChessPieceType.King)
+        {
+            ShowResult(cp.team);
+        }
+    }
     private void PositioningAllChessPieces()
     {
         for(int x = 0; x < TILE_COUNT_X; x++)
@@ -253,7 +284,7 @@ public class Chessboard : MonoBehaviour
         if (force && chessPieces[x, y].type == ChessPieceType.Knight)
         {
             Vector3 eulerAngles = chessPieces[x, y].transform.rotation.eulerAngles;
-            eulerAngles.y = chessPieces[x, y].team == 1 ? 90 : -90;
+            eulerAngles.y = chessPieces[x, y].team == 0 ? 90 : -90;
             chessPieces[x, y].transform.rotation = Quaternion.Euler(eulerAngles);
         }
     }
@@ -274,6 +305,10 @@ public class Chessboard : MonoBehaviour
     public Vector3 GetCenterTile(int x, int y)
     {
         return new Vector3(x * tileSize, yOffset, y * tileSize) - bounds + new Vector3(tileSize / 2, 0, tileSize / 2);
+    }
+    public ChessPiece GetChessPiece(int x, int y)
+    {
+        return chessPieces[x, y];
     }
     public void DisplayHint()
     {
@@ -297,6 +332,7 @@ public class Chessboard : MonoBehaviour
         chessBoard[x, y].layer = LayerMask.NameToLayer(layer.ToString());
         chessBoard[x, y].GetComponent<MeshRenderer>().material = tileMaterials[(int)layer];
     }
+    // Checking legal moves
     public bool CanMove(int x, int y, int team)
     {
         return IsValidPos(x, y) && (chessPieces[x, y] == null || chessPieces[x, y].team != team);
@@ -309,6 +345,7 @@ public class Chessboard : MonoBehaviour
     {
         return x >= 0 && x <= 7 && y >= 0 && y <= 7;
     }
+    // Reset the game
     public void ResetChessBoard()
     {
         ResetChessPiecesOnBoard();
@@ -347,6 +384,7 @@ public class Chessboard : MonoBehaviour
         ChessPiecePositioning(cp.InitialPos.x, cp.InitialPos.y);
         cp.SetScale(1.3f);
     }
+    // UI
     private void ShowResult(int teamLose)
     {
         int winner = teamLose == 0 ? 1 : 0;

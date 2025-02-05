@@ -24,6 +24,7 @@ public class ChessPiece : MonoBehaviour
     protected Vector3 desiredPosition = Vector3.one;
     protected Vector3 scale;
     protected Vector3 originalScale;
+    protected SpecialMove specialMove = SpecialMove.None;
 
     public bool IsClicked { get { return clicked; } }
     public List<Vector2Int> DesiredMove
@@ -36,7 +37,7 @@ public class ChessPiece : MonoBehaviour
     protected virtual void Awake()
     {
         originalScale = transform.localScale;
-        SetScale(1.3f, true);
+        SetScale(1.5f, true);
     }
     protected virtual void Update()
     {
@@ -47,6 +48,10 @@ public class ChessPiece : MonoBehaviour
     {
         Debug.LogError(string.Format("Selected {0} of team {1} at X:{2}, Y:{3}", type, team, x, y));
         desiredMove.Clear();
+    }
+    public virtual SpecialMove GetSpecialMove()
+    {
+        return SpecialMove.None;
     }
     public void SetPosition(Vector3 position, bool force = false)
     {
@@ -129,12 +134,6 @@ public class ChessPiece : MonoBehaviour
     {
         InitialPos = pos;
     }
-    // public void ResetToInitialPos()
-    // {
-    //     x = InitialPos.x;
-    //     y = InitialPos.y;
-    //     SetScale(1.3f);    
-    // }
     protected bool CanMove(int x, int y, int team)
     {
         return Chessboard.Instance.CanMove(x, y, team);

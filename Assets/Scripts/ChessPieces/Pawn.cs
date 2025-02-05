@@ -1,8 +1,16 @@
+using System;
+using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
 
 public class Pawn : ChessPiece
 {
+    Vector2Int EnPassantPos = new Vector2Int(-1, -1);
+    protected override void Awake()
+    {
+        originalScale = transform.localScale;
+        SetScale(1.2f, true);
+    }
     public override void OnClicked()
     {
         base.OnClicked();
@@ -28,5 +36,34 @@ public class Pawn : ChessPiece
         {
             desiredMove.Add(new Vector2Int(movePos.x - 1, movePos.y));
         }
+        if (Chessboard.Instance.MoveList.Count > 0)
+        {
+            Vector2Int[] lastMove = Chessboard.Instance.MoveList[Chessboard.Instance.MoveList.Count - 1];
+            ChessPiece cp = Chessboard.Instance.GetChessPiece(lastMove[1].x, lastMove[1].y);
+            if (cp.type == ChessPieceType.Pawn && cp.team != team)
+            {
+                if (Math.Abs(lastMove[1].y - lastMove[0].y) == 2)
+                {
+                    if (lastMove[1].y == y)
+                    {
+                        EnPassantPos = new Vector2Int(cp.x, y + (team == 1 ? 1 : -1));
+                        desiredMove.Add(EnPassantPos);
+                        return;
+                    }
+                }
+            }
+        }
+    }
+    public override SpecialMove GetSpecialMove()
+    {
+        if(y == 0 || y == 7)
+        {
+            return SpecialMove.Promotion;
+        }
+        if(x == EnPassantPos.x && y == EnPassantPos.y)
+        {
+            return SpecialMove.EnPassant;
+        }
+        return SpecialMove.None;
     }
 }
