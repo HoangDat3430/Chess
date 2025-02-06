@@ -1,4 +1,5 @@
 using UnityEngine;
+using UnityEngine.Rendering.UI;
 
 public class UIManager : MonoBehaviour
 {
@@ -41,6 +42,7 @@ public class UIManager : MonoBehaviour
     }
     public void ConfirmPromote(int type)
     {
+        if(gameOver) { return; }
         Chessboard.Instance.Promote((ChessPieceType)type);
         promotionScreen.SetActive(false);
     }
@@ -50,6 +52,7 @@ public class UIManager : MonoBehaviour
         victoryScreen.SetActive(true);
         victoryScreen.transform.GetChild(teamLose).gameObject.SetActive(false);
         victoryScreen.transform.GetChild(winner).gameObject.SetActive(true);
+        gameOver = true;
     }
     public void ResetGame()
     {
