@@ -35,10 +35,8 @@ public class Chessboard : MonoBehaviour
     [SerializeField] private Material[] tileMaterials;
     [SerializeField] private float tileSize = 0.1f;
     [SerializeField] private float yOffset = 0.01f;
-    [SerializeField] private Vector3 boardCenter = Vector3.zero;
     [SerializeField] private float deathSpace = 3f;
     [SerializeField] private float deathScale = 0.8f;
-    [SerializeField] private GameObject victoryScreen;
 
     [Header("Prefabs and Materials")]
     [SerializeField] private GameObject[] prefabs;
@@ -48,6 +46,7 @@ public class Chessboard : MonoBehaviour
     private const int TILE_COUNT_Y = 8;
     private GameObject[,] chessBoard;
     private ChessPiece[,] chessPieces;
+    private List<ChessPiece> allChessPieces = new List<ChessPiece>();
     private List<ChessPiece> deathBlack = new List<ChessPiece>();
     private List<ChessPiece> deathWhite = new List<ChessPiece>();
     private Camera curCamera;
@@ -131,7 +130,7 @@ public class Chessboard : MonoBehaviour
     private void GenerateAllTiles(float tileSize, int tileCountX, int tileCountY)
     {
         yOffset += transform.position.y;
-        bounds = new Vector3(tileCountX/2 * tileSize, 0, tileCountY/2 * tileSize) + boardCenter;
+        bounds = new Vector3(tileCountX/2 * tileSize, 0, tileCountY/2 * tileSize);
         chessBoard = new GameObject[tileCountX, tileCountY];
         for(int x = 0; x < tileCountX; x++){
             for(int y = 0; y < tileCountY; y++){
@@ -207,6 +206,7 @@ public class Chessboard : MonoBehaviour
         ChessPiece chessPiece = chess.GetComponent<ChessPiece>();
         chessPiece.type = type;
         chessPiece.team = team;
+        allChessPieces.Add(chessPiece);
         return chessPiece;
     }
     // Special moves
@@ -222,14 +222,22 @@ public class Chessboard : MonoBehaviour
             case SpecialMove.Castling:
                 break;
             case SpecialMove.Promotion:
-                Vector2Int[] promotionPos = moveList[moveList.Count - 1];
-                chessPieces[promotionPos[1].x, promotionPos[1].y] = SpawnSinglePiece(ChessPieceType.Queen, turn ? 1 : 0);
-                chessPieces[promotionPos[1].x, promotionPos[1].y].isTransformed = true;
-                ChessPiecePositioning(promotionPos[1].x, promotionPos[1].y);
-                turn = !turn;
+                UIManager.Instance.ShowPromoteUI();
                 break;
         }
         specialMove = SpecialMove.None;
+    }
+    public void Promote(ChessPieceType type)
+    {
+        turn = !turn;
+        Vector2Int[] promotionPos = moveList[moveList.Count - 1];
+        ChessPiece pawn = chessPieces[promotionPos[1].x, promotionPos[1].y];
+        pawn.x = -1; pawn.y = -1;
+        pawn.gameObject.SetActive(false);
+        chessPieces[promotionPos[1].x, promotionPos[1].y] = SpawnSinglePiece(type, turn ? 1 : 0);
+        chessPieces[promotionPos[1].x, promotionPos[1].y].isPromoted = true;
+        allChessPieces.Add(chessPieces[promotionPos[1].x, promotionPos[1].y]);
+        ChessPiecePositioning(promotionPos[1].x, promotionPos[1].y);
     }
     // Chesspiece positioning
     private void MoveTo(Vector2Int postion)
@@ -248,21 +256,22 @@ public class Chessboard : MonoBehaviour
     }    
     private void EliminateChessPiece(ChessPiece cp)
     {
+        chessPieces[cp.x, cp.y] = null;
         if (cp.team == 0)
         {
-            cp.SetPosition(GetCenterTile(0, 7) - new Vector3(2 * tileSize, 2, deathWhite.Count * deathSpace - tileSize));
+            cp.SetPosition(GetCenterTile(0, 7, cp.type == ChessPieceType.Pawn) - new Vector3(2 * tileSize, 2, deathWhite.Count * deathSpace - tileSize));
             deathWhite.Add(cp);
             cp.SetScale(deathScale);
         }
         else
         {
-            cp.SetPosition(GetCenterTile(7, 0) + new Vector3(2 * tileSize, -2, deathBlack.Count * deathSpace - tileSize));
+            cp.SetPosition(GetCenterTile(7, 0, cp.type == ChessPieceType.Pawn) + new Vector3(2 * tileSize, -2, deathBlack.Count * deathSpace - tileSize));
             deathBlack.Add(cp);
             cp.SetScale(deathScale);
         }
         if (cp.type == ChessPieceType.King)
         {
-            ShowResult(cp.team);
+            UIManager.Instance.ShowResult(cp.team);
         }
     }
     private void PositioningAllChessPieces()
@@ -282,7 +291,7 @@ public class Chessboard : MonoBehaviour
     {
         chessPieces[x, y].x = x;
         chessPieces[x, y].y = y;
-        chessPieces[x, y].SetPosition(GetCenterTile(x, y), force);
+        chessPieces[x, y].SetPosition(GetCenterTile(x, y, chessPieces[x, y].type == ChessPieceType.Pawn), force);
         if (force && chessPieces[x, y].type == ChessPieceType.Knight)
         {
             Vector3 eulerAngles = chessPieces[x, y].transform.rotation.eulerAngles;
@@ -304,9 +313,9 @@ public class Chessboard : MonoBehaviour
         }
         return -Vector2Int.one;
     }
-    public Vector3 GetCenterTile(int x, int y)
-    {
-        return new Vector3(x * tileSize, yOffset, y * tileSize) - bounds + new Vector3(tileSize / 2, 0, tileSize / 2);
+    public Vector3 GetCenterTile(int x, int y, bool isPawn)
+    {   
+        return new Vector3(x * tileSize, yOffset + (isPawn ? 1.2f : 0), y * tileSize) - bounds + new Vector3(tileSize / 2, 0, tileSize / 2);
     }
     public ChessPiece GetChessPiece(int x, int y)
     {
@@ -350,58 +359,28 @@ public class Chessboard : MonoBehaviour
     // Reset the game
     public void ResetChessBoard()
     {
-        ResetChessPiecesOnBoard();
-        ResetChessPiecesDeath(deathBlack);
-        ResetChessPiecesDeath(deathWhite);
+        ResetAllChessPieces();
         moveList.Clear();
         specialMove = SpecialMove.None;
     }
-    private void ResetChessPiecesOnBoard()
+    public void ResetAllChessPieces()
     {
-        for(int x = 0; x < TILE_COUNT_X; x++)
+        foreach(ChessPiece cp in allChessPieces)
         {
-            for(int y = 0; y < TILE_COUNT_Y; y++)
+            if (IsValidPos(cp.x, cp.y))
             {
-                if (chessPieces[x, y] != null)
-                {
-                    PostioningChessPieceToInitialPosition(chessPieces[x, y]);
-                }
+                chessPieces[cp.x, cp.y] = null;
             }
+            if (cp.isPromoted)
+            {
+                Destroy(cp.gameObject);
+                continue;
+            }
+            cp.gameObject.SetActive(true);
+            chessPieces[cp.InitialPos.x, cp.InitialPos.y] = cp;
+            ChessPiecePositioning(cp.InitialPos.x, cp.InitialPos.y);
+            cp.SetScale(cp.NormalScale);
         }
-    }
-    private void ResetChessPiecesDeath(List<ChessPiece> team)
-    {
-        for (int i = 0; i < team.Count; i++)
-        {
-            PostioningChessPieceToInitialPosition(team[i]);
-        }
-    }
-    public void PostioningChessPieceToInitialPosition(ChessPiece cp)
-    {
-        if(chessPieces[cp.x, cp.y] != null)
-        {
-            chessPieces[cp.x, cp.y] = null;
-        }
-        chessPieces[cp.InitialPos.x, cp.InitialPos.y] = cp;
-        ChessPiecePositioning(cp.InitialPos.x, cp.InitialPos.y);
-        cp.SetScale(1.3f);
-    }
-    // UI
-    private void ShowResult(int teamLose)
-    {
-        int winner = teamLose == 0 ? 1 : 0;
-        victoryScreen.SetActive(true);
-        victoryScreen.transform.GetChild(teamLose).gameObject.SetActive(false);
-        victoryScreen.transform.GetChild(winner).gameObject.SetActive(true);
-    }
-    public void ResetGame()
-    {
-        victoryScreen.SetActive(false);
-        ResetChessBoard();
-    }
-    public void ExitGame()
-    {
-        Application.Quit();
     }
     private void ClearAllTiles()
     {

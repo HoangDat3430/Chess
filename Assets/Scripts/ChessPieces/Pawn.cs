@@ -3,11 +3,12 @@ using UnityEngine;
 
 public class Pawn : ChessPiece
 {
-    Vector2Int EnPassantPos = new Vector2Int(-1, -1);
+    private Vector2Int EnPassantPos = new Vector2Int(-1, -1);
+
     protected override void Awake()
     {
-        originalScale = transform.localScale;
-        SetScale(1.2f, true);
+        normalScale = 1.2f;
+        base.Awake();
     }
     public override void OnClicked()
     {
@@ -17,7 +18,7 @@ public class Pawn : ChessPiece
         {
             desiredMove.Add(new Vector2Int(movePos.x, movePos.y));
             // First move of a pawn can through 2 tiles
-            if(y == InitialPos.y)
+            if (y == InitialPos.y)
             {
                 Vector2Int fstMove = new Vector2Int(movePos.x, movePos.y + (team == 1 ? 1 : -1));
                 if (CanMove(fstMove.x, fstMove.y, team) && !CollideOpponent(fstMove.x, fstMove.y, team))
@@ -54,11 +55,11 @@ public class Pawn : ChessPiece
     }
     public override SpecialMove GetSpecialMove()
     {
-        if(y == 0 || y == 7)
+        if (y == 0 || y == 7)
         {
             return SpecialMove.Promotion;
         }
-        if(x == EnPassantPos.x && y == EnPassantPos.y)
+        if (x == EnPassantPos.x && y == EnPassantPos.y)
         {
             return SpecialMove.EnPassant;
         }

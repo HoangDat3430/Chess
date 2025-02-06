@@ -4,8 +4,8 @@ public class Knight : ChessPiece
 {
     protected override void Awake()
     {
-        originalScale = transform.localScale;
-        SetScale(1.2f, true);
+        normalScale = 1.2f;
+        base.Awake();
     }
     public override void OnClicked()
     {

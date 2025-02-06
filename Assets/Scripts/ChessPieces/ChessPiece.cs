@@ -17,13 +17,21 @@ public class ChessPiece : MonoBehaviour
     public int x, y;
     public Vector2Int InitialPos = -Vector2Int.one;
     public int team;
-    public bool isTransformed = false;
+    public bool isPromoted = false;
     protected List<Vector2Int> desiredMove = new List<Vector2Int>();
     protected Vector3 desiredPosition = Vector3.one;
     protected Vector3 scale;
+    protected float normalScale = 1.5f;
     protected Vector3 originalScale;
     protected SpecialMove specialMove = SpecialMove.None;
-
+    
+    public float NormalScale
+    {
+        get
+        {
+            return normalScale;
+        }
+    }
     public List<Vector2Int> DesiredMove
     {
         get
@@ -34,7 +42,7 @@ public class ChessPiece : MonoBehaviour
     protected virtual void Awake()
     {
         originalScale = transform.localScale;
-        SetScale(1.5f, true);
+        SetScale(normalScale, true);
     }
     protected virtual void Update()
     {
@@ -57,7 +65,7 @@ public class ChessPiece : MonoBehaviour
         {
             transform.position = desiredPosition;
         } 
-        if(!isTransformed && InitialPos == -Vector2Int.one)
+        if(!isPromoted && InitialPos == -Vector2Int.one)
         {
             SetInitPos(new Vector2Int(x, y));
         } 
@@ -130,7 +138,7 @@ public class ChessPiece : MonoBehaviour
     public void SetInitPos(Vector2Int pos)
     {
         InitialPos = pos;
-    }
+    }  
     protected bool CanMove(int x, int y, int team)
     {
         return Chessboard.Instance.CanMove(x, y, team);
