@@ -1,6 +1,4 @@
 using System.Collections.Generic;
-using Unity.VisualScripting;
-using UnityEditor.Timeline;
 using UnityEngine;
 
 public enum ChessPieceType
@@ -19,14 +17,13 @@ public class ChessPiece : MonoBehaviour
     public int x, y;
     public Vector2Int InitialPos = -Vector2Int.one;
     public int team;
-    private bool clicked = false;
+    public bool isTransformed = false;
     protected List<Vector2Int> desiredMove = new List<Vector2Int>();
     protected Vector3 desiredPosition = Vector3.one;
     protected Vector3 scale;
     protected Vector3 originalScale;
     protected SpecialMove specialMove = SpecialMove.None;
 
-    public bool IsClicked { get { return clicked; } }
     public List<Vector2Int> DesiredMove
     {
         get
@@ -60,7 +57,7 @@ public class ChessPiece : MonoBehaviour
         {
             transform.position = desiredPosition;
         } 
-        if(InitialPos == -Vector2Int.one)
+        if(!isTransformed && InitialPos == -Vector2Int.one)
         {
             SetInitPos(new Vector2Int(x, y));
         } 

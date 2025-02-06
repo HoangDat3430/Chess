@@ -1,9 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Runtime.CompilerServices;
+using Unity.VisualScripting;
 using UnityEngine;
-using UnityEngine.Rendering.UI;
-using UnityEngine.UIElements;
 
 public enum SpecialMove
 {
@@ -218,12 +216,16 @@ public class Chessboard : MonoBehaviour
         switch (specialMove)
         {
             case SpecialMove.EnPassant:
-                Vector2Int[] pawnCatchPos = moveList[moveList.Count - 2];
-                EliminateChessPiece(chessPieces[pawnCatchPos[1].x, pawnCatchPos[1].y]);
+                Vector2Int[] enPassantPos = moveList[moveList.Count - 2];
+                EliminateChessPiece(chessPieces[enPassantPos[1].x, enPassantPos[1].y]);
                 break;
             case SpecialMove.Castling:
                 break;
             case SpecialMove.Promotion:
+                Vector2Int[] promotionPos = moveList[moveList.Count - 1];
+                chessPieces[promotionPos[1].x, promotionPos[1].y] = SpawnSinglePiece(ChessPieceType.Queen, turn ? 1 : 0);
+                chessPieces[promotionPos[1].x, promotionPos[1].y].isTransformed = true;
+                ChessPiecePositioning(promotionPos[1].x, promotionPos[1].y);
                 turn = !turn;
                 break;
         }
