@@ -8,12 +8,6 @@ public class King : ChessPiece
     public override void GetAvailableMoves()
     {
         base.GetAvailableMoves();
-        int[,] directions = {
-                    { -1,  0 }, { 1,  0 },  // Up, Down
-                    { 0, -1 }, { 0,  1 },  // Left, Right
-                    { -1, -1 }, { -1,  1 }, // Top-Left, Top-Right
-                    { 1, -1 }, { 1,  1 }   // Bottom-Left, Bottom-Right
-        base.OnClicked();
         Vector2Int[] directions = {
                     new (-1,  0 ), new ( 1,  0 ),  // Up, Down
                     new (0, -1), new (0, 1),  // Left, Right
