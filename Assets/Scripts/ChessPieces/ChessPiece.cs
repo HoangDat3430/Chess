@@ -32,7 +32,7 @@ public class ChessPiece : MonoBehaviour
             return normalScale;
         }
     }
-    public List<Vector2Int> DesiredMove
+    public List<Vector2Int> AvailableMoves
     {
         get
         {

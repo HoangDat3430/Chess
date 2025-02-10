@@ -56,6 +56,7 @@ public class Chessboard : MonoBehaviour
     private bool turn;
     private SpecialMove specialMove = SpecialMove.None;
     private List<Vector2Int[]> movesList = new List<Vector2Int[]>();
+    private ChessPiece checkingChess = null;
 
     //for test
     private float curSizeTile;
@@ -92,11 +93,14 @@ public class Chessboard : MonoBehaviour
             {
                 if (chessPieces[curHover.x, curHover.y] != null && chessPieces[curHover.x, curHover.y].team == Convert.ToInt32(turn))
                 {
-                    ClearHint();
-                    curSelected = chessPieces[curHover.x, curHover.y];
-                    curSelected.GetAvailableMoves();
-                    specialMove = curSelected.GetSpecialMove(ref chessPieces, ref movesList);
-                    DisplayHint();
+                    if(checkingChess == null || curSelected.type == ChessPieceType.King)
+                    {
+                        ClearHint();
+                        curSelected = chessPieces[curHover.x, curHover.y];
+                        curSelected.GetAvailableMoves();
+                        specialMove = curSelected.GetSpecialMove(ref chessPieces, ref movesList);
+                        DisplayHint();
+                    }    
                 }
             }
 
@@ -336,16 +340,21 @@ public class Chessboard : MonoBehaviour
     }
     public void DisplayHint()
     {
-        List<Vector2Int> moves = curSelected.DesiredMove;
+        List<Vector2Int> moves = curSelected.AvailableMoves;
         for(int i = 0; i < moves.Count; i++)
         {
+            if (Checking(moves[i].x, moves[i].y))
+            {
+                Debug.LogError("CHECKING!!!");
+                Prevent();
+            }    
             SetTileLayer(moves[i].x, moves[i].y, Layer.Desired);
         }
     }
     private void ClearHint()
     {
         if (!curSelected) return;
-        List<Vector2Int> moves = curSelected.DesiredMove;
+        List<Vector2Int> moves = curSelected.AvailableMoves;
         for (int i = 0; i < moves.Count; i++)
         {
             SetTileLayer(moves[i].x, moves[i].y, Layer.Tile);
@@ -369,7 +378,19 @@ public class Chessboard : MonoBehaviour
     {
         return x >= 0 && x <= 7 && y >= 0 && y <= 7;
     }
-    // Reset the game
+    private bool Checking(int x, int y)
+    {
+        if(chessPieces[x, y].type == ChessPieceType.King)
+        {
+            checkingChess = curSelected;
+        }    
+        return chessPieces[x, y].type == ChessPieceType.King;
+    }    
+    // Game operations
+    private void Prevent()
+    {
+        Debug.LogError("Only king is alowed to move");
+    }    
     public void ResetChessBoard()
     {
         ResetAllChessPieces();
