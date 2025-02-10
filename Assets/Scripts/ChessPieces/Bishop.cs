@@ -3,9 +3,9 @@ using UnityEngine;
 
 public class Bishop : ChessPiece
 {
-    public override void OnClicked()
+    public override void GetAvailableMoves()
     {
-        base.OnClicked();
+        base.GetAvailableMoves();
         GetAllDiagnosePaths();
     }
 }

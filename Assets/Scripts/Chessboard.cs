@@ -55,9 +55,8 @@ public class Chessboard : MonoBehaviour
     private ChessPiece curSelected;
     private bool turn;
     private SpecialMove specialMove = SpecialMove.None;
-    private List<Vector2Int[]> moveList = new List<Vector2Int[]>();
+    private List<Vector2Int[]> movesList = new List<Vector2Int[]>();
 
-    public List<Vector2Int[]> MoveList { get { return moveList; } }
     //for test
     private float curSizeTile;
     private float curYOffset;
@@ -95,7 +94,8 @@ public class Chessboard : MonoBehaviour
                 {
                     ClearHint();
                     curSelected = chessPieces[curHover.x, curHover.y];
-                    curSelected.OnClicked();
+                    curSelected.GetAvailableMoves();
+                    specialMove = curSelected.GetSpecialMove(ref chessPieces, ref movesList);
                     DisplayHint();
                 }
             }
@@ -187,8 +187,8 @@ public class Chessboard : MonoBehaviour
         chessPieces[0, 7] = SpawnSinglePiece(ChessPieceType.Rook, 0);
         chessPieces[1, 7] = SpawnSinglePiece(ChessPieceType.Knight, 0);
         chessPieces[2, 7] = SpawnSinglePiece(ChessPieceType.Bishop, 0);
-        chessPieces[3, 7] = SpawnSinglePiece(ChessPieceType.King, 0);
-        chessPieces[4, 7] = SpawnSinglePiece(ChessPieceType.Queen, 0);
+        chessPieces[3, 7] = SpawnSinglePiece(ChessPieceType.Queen, 0);
+        chessPieces[4, 7] = SpawnSinglePiece(ChessPieceType.King, 0);
         chessPieces[5, 7] = SpawnSinglePiece(ChessPieceType.Bishop, 0);
         chessPieces[6, 7] = SpawnSinglePiece(ChessPieceType.Knight, 0);
         chessPieces[7, 7] = SpawnSinglePiece(ChessPieceType.Rook, 0);
@@ -212,17 +212,35 @@ public class Chessboard : MonoBehaviour
     // Special moves
     private void ProcessingSpecialMove()
     {
-        Debug.LogError(specialMove);
+        Vector2Int[] lastMove = movesList[movesList.Count - 1];
         switch (specialMove)
         {
             case SpecialMove.EnPassant:
-                Vector2Int[] enPassantPos = moveList[moveList.Count - 2];
-                EliminateChessPiece(chessPieces[enPassantPos[1].x, enPassantPos[1].y]);
+                Vector2Int[] targetEnemy = movesList[movesList.Count - 2];
+                if (lastMove[1].x == targetEnemy[1].x)
+                {
+                    EliminateChessPiece(chessPieces[targetEnemy[1].x, targetEnemy[1].y]);
+                }
                 break;
             case SpecialMove.Castling:
+                if(lastMove[1].x - lastMove[0].x == 2) // casttling left
+                {
+                    chessPieces[lastMove[1].x - 1, lastMove[1].y] = chessPieces[7, lastMove[1].y];
+                    chessPieces[7, lastMove[1].y] = null;
+                    ChessPiecePositioning(lastMove[1].x - 1, lastMove[1].y);
+                }
+                else if (lastMove[1].x - lastMove[0].x == -2)
+                {
+                    chessPieces[lastMove[1].x + 1, lastMove[1].y] = chessPieces[0, lastMove[1].y];
+                    chessPieces[0, lastMove[1].y] = null;
+                    ChessPiecePositioning(lastMove[1].x + 1, lastMove[1].y);
+                }
                 break;
             case SpecialMove.Promotion:
-                UIManager.Instance.ShowPromoteUI();
+                if (lastMove[1].y == 0 || lastMove[1].y == 7)
+                {
+                    UIManager.Instance.ShowPromoteUI();
+                }
                 break;
         }
         specialMove = SpecialMove.None;
@@ -230,7 +248,7 @@ public class Chessboard : MonoBehaviour
     public void Promote(ChessPieceType type)
     {
         turn = !turn;
-        Vector2Int[] promotionPos = moveList[moveList.Count - 1];
+        Vector2Int[] promotionPos = movesList[movesList.Count - 1];
         ChessPiece pawn = chessPieces[promotionPos[1].x, promotionPos[1].y];
         pawn.x = -1; pawn.y = -1;
         pawn.gameObject.SetActive(false);
@@ -247,11 +265,10 @@ public class Chessboard : MonoBehaviour
         {
             EliminateChessPiece(cp);
         }
-        moveList.Add(new Vector2Int[] { new Vector2Int(curSelected.x, curSelected.y), postion });
+        movesList.Add(new Vector2Int[] { new Vector2Int(curSelected.x, curSelected.y), postion });
         chessPieces[postion.x, postion.y] = chessPieces[curSelected.x, curSelected.y];
         chessPieces[curSelected.x, curSelected.y] = null;
         ChessPiecePositioning(postion.x, postion.y);
-        specialMove = chessPieces[postion.x, postion.y].GetSpecialMove();
         ProcessingSpecialMove();
     }    
     private void EliminateChessPiece(ChessPiece cp)
@@ -317,10 +334,6 @@ public class Chessboard : MonoBehaviour
     {   
         return new Vector3(x * tileSize, yOffset + (isPawn ? 1.2f : 0), y * tileSize) - bounds + new Vector3(tileSize / 2, 0, tileSize / 2);
     }
-    public ChessPiece GetChessPiece(int x, int y)
-    {
-        return chessPieces[x, y];
-    }
     public void DisplayHint()
     {
         List<Vector2Int> moves = curSelected.DesiredMove;
@@ -360,7 +373,7 @@ public class Chessboard : MonoBehaviour
     public void ResetChessBoard()
     {
         ResetAllChessPieces();
-        moveList.Clear();
+        movesList.Clear();
         specialMove = SpecialMove.None;
     }
     public void ResetAllChessPieces()

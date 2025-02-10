@@ -7,48 +7,48 @@ public class Knight : ChessPiece
         normalScale = 1.2f;
         base.Awake();
     }
-    public override void OnClicked()
+    public override void GetAvailableMoves()
     {
-        base.OnClicked();
+        base.GetAvailableMoves();
         Vector2Int movePos = new Vector2Int(this.x + 1, this.y + 2);
         if (CanMove(movePos.x, movePos.y, team))
         {
-            desiredMove.Add(movePos);
+            availableMoves.Add(movePos);
         }
         movePos = new Vector2Int(this.x + 1, this.y - 2);
         if (CanMove(movePos.x, movePos.y, team))
         {
-            desiredMove.Add(movePos);
+            availableMoves.Add(movePos);
         }
         movePos = new Vector2Int(this.x - 1, this.y + 2);
         if (CanMove(movePos.x, movePos.y, team))
         {
-            desiredMove.Add(movePos);
+            availableMoves.Add(movePos);
         }
         movePos = new Vector2Int(this.x - 1, this.y - 2);
         if (CanMove(movePos.x, movePos.y, team))
         {
-            desiredMove.Add(movePos);
+            availableMoves.Add(movePos);
         }
         movePos = new Vector2Int(this.x + 2, this.y + 1);
         if (CanMove(movePos.x, movePos.y, team))
         {
-            desiredMove.Add(movePos);
+            availableMoves.Add(movePos);
         }
         movePos = new Vector2Int(this.x + 2, this.y - 1);
         if (CanMove(movePos.x, movePos.y, team))
         {
-            desiredMove.Add(movePos);
+            availableMoves.Add(movePos);
         }
         movePos = new Vector2Int(this.x - 2, this.y + 1);
         if (CanMove(movePos.x, movePos.y, team))
         {
-            desiredMove.Add(movePos);
+            availableMoves.Add(movePos);
         }
         movePos = new Vector2Int(this.x - 2, this.y - 1);
         if (CanMove(movePos.x, movePos.y, team))
         {
-            desiredMove.Add(movePos);
+            availableMoves.Add(movePos);
         }
     }
 }

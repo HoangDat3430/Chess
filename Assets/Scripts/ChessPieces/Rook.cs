@@ -3,9 +3,9 @@ using UnityEngine;
 
 public class Rook : ChessPiece
 {
-    public override void OnClicked()
+    public override void GetAvailableMoves()
     {
-        desiredMove.Clear();
+        availableMoves.Clear();
         GetHorizontalPath(x, y);
         GetVerticalPath(y, x);
     }

@@ -18,7 +18,7 @@ public class ChessPiece : MonoBehaviour
     public Vector2Int InitialPos = -Vector2Int.one;
     public int team;
     public bool isPromoted = false;
-    protected List<Vector2Int> desiredMove = new List<Vector2Int>();
+    protected List<Vector2Int> availableMoves = new List<Vector2Int>();
     protected Vector3 desiredPosition = Vector3.one;
     protected Vector3 scale;
     protected float normalScale = 1.5f;
@@ -36,7 +36,7 @@ public class ChessPiece : MonoBehaviour
     {
         get
         {
-            return desiredMove;
+            return availableMoves;
         }
     }
     protected virtual void Awake()
@@ -49,12 +49,12 @@ public class ChessPiece : MonoBehaviour
         transform.position = Vector3.Lerp(transform.position, desiredPosition, Time.deltaTime * 10f);
         transform.localScale = Vector3.Lerp(transform.localScale, scale, Time.deltaTime * 10f);
     }
-    public virtual void OnClicked()
+    public virtual void GetAvailableMoves()
     {
         Debug.LogError(string.Format("Selected {0} of team {1} at X:{2}, Y:{3}", type, team, x, y));
-        desiredMove.Clear();
+        availableMoves.Clear();
     }
-    public virtual SpecialMove GetSpecialMove()
+    public virtual SpecialMove GetSpecialMove(ref ChessPiece[,] board, ref List<Vector2Int[]> movedList)
     {
         return SpecialMove.None;
     }
@@ -83,13 +83,13 @@ public class ChessPiece : MonoBehaviour
         for (int x = dynamicX + 1; x <= 7; x++)
         {
             if (!CanMove(x, staticY, team)) break;
-            desiredMove.Add(new Vector2Int(x, staticY));
+            availableMoves.Add(new Vector2Int(x, staticY));
             if (CollideOpponent(x, staticY, team)) break;
         }
         for (int x = dynamicX - 1; x >= 0; x--)
         {
             if (!CanMove(x, staticY, team)) break;
-            desiredMove.Add(new Vector2Int(x, staticY));
+            availableMoves.Add(new Vector2Int(x, staticY));
             if (CollideOpponent(x, staticY, team)) break;
         }
     }
@@ -98,13 +98,13 @@ public class ChessPiece : MonoBehaviour
         for (int y = dynamicY + 1; y <= 7; y++)
         {
             if (!CanMove(staticX, y, team)) break;
-            desiredMove.Add(new Vector2Int(staticX, y));
+            availableMoves.Add(new Vector2Int(staticX, y));
             if (CollideOpponent(staticX, y, team)) break;
         }
         for (int y = dynamicY - 1; y >= 0; y--)
         {
             if (!CanMove(staticX, y, team)) break;
-            desiredMove.Add(new Vector2Int(staticX, y));
+            availableMoves.Add(new Vector2Int(staticX, y));
             if (CollideOpponent(staticX, y, team)) break;
         }
     }
@@ -113,25 +113,25 @@ public class ChessPiece : MonoBehaviour
         for (int x = this.x + 1, y = this.y + 1; x <= 7 && y <= 7; x++, y++)
         {
             if (!CanMove(x, y, team)) break;
-            desiredMove.Add(new Vector2Int(x, y));
+            availableMoves.Add(new Vector2Int(x, y));
             if (CollideOpponent(x, y, team)) break;
         }
         for (int x = this.x - 1, y = this.y + 1; x >= 0 && y <= 7; x--, y++)
         {
             if (!CanMove(x, y, team)) break;
-            desiredMove.Add(new Vector2Int(x, y));
+            availableMoves.Add(new Vector2Int(x, y));
             if (CollideOpponent(x, y, team)) break;
         }
         for (int y = this.y - 1, x = this.x + 1; y >= 0 && x <= 7; y--, x++)
         {
             if (!CanMove(x, y, team)) break;
-            desiredMove.Add(new Vector2Int(x, y));
+            availableMoves.Add(new Vector2Int(x, y));
             if (CollideOpponent(x, y, team)) break;
         }
         for (int y = this.y - 1, x = this.x - 1; y >= 0 && x >= 0; y--, x--)
         {
             if (!CanMove(x, y, team)) break;
-            desiredMove.Add(new Vector2Int(x, y));
+            availableMoves.Add(new Vector2Int(x, y));
             if (CollideOpponent(x, y, team)) break;
         }
     }

@@ -18,11 +18,9 @@ public class UIManager : MonoBehaviour
             return _instance;
         }
     }
-    private bool gameOver;
     private void Awake()
     {
         _instance = this;
-        gameOver = false;
     }
     // Start is called before the first frame update
     void Start()

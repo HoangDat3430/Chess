@@ -3,9 +3,9 @@ using UnityEngine;
 
 public class Queen : ChessPiece
 {
-    public override void OnClicked()
+    public override void GetAvailableMoves()
     {
-        base.OnClicked();
+        base.GetAvailableMoves();
         GetHorizontalPath(x, y);
         GetVerticalPath(y, x);
         GetAllDiagnosePaths();
