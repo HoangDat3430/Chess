@@ -263,10 +263,12 @@ public class Chessboard : MonoBehaviour
         ChessPiece pawn = chessPieces[promotionPos[1].x, promotionPos[1].y];
         pawn.x = -1; pawn.y = -1;
         pawn.gameObject.SetActive(false);
-        chessPieces[promotionPos[1].x, promotionPos[1].y] = SpawnSinglePiece(type, turn % 2);
-        chessPieces[promotionPos[1].x, promotionPos[1].y].isPromoted = true;
-        allChessPieces.Add(chessPieces[promotionPos[1].x, promotionPos[1].y]);
+        ChessPiece newChess = SpawnSinglePiece(type, turn % 2);
+        chessPieces[promotionPos[1].x, promotionPos[1].y] = newChess;
+        newChess.isPromoted = true;
+        allChessPieces.Add(newChess);
         ChessPiecePositioning(promotionPos[1].x, promotionPos[1].y);
+        newChess.GetAvailableMoves();
     }
     // Chesspiece positioning
     private void MoveTo(Vector2Int position)
@@ -443,6 +445,7 @@ public class Chessboard : MonoBehaviour
             chessPieces[cp.InitialPos.x, cp.InitialPos.y] = cp;
             ChessPiecePositioning(cp.InitialPos.x, cp.InitialPos.y);
             cp.SetScale(cp.NormalScale);
+            cp.isDead = false;
         }
     }
     private void ClearAllTiles()
