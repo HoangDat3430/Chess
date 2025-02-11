@@ -14,7 +14,8 @@ public enum Layer
 {
     Tile,
     Hover,
-    Desired
+    Desired,
+    Danger
 }
 public class Chessboard : MonoBehaviour
 {
@@ -53,11 +54,19 @@ public class Chessboard : MonoBehaviour
     private Vector2Int curHover;
     private Vector3 bounds;
     private ChessPiece curSelected;
-    private bool turn;
+    private int turn = 1;
     private SpecialMove specialMove = SpecialMove.None;
     private List<Vector2Int[]> movesList = new List<Vector2Int[]>();
     private ChessPiece checkingChess = null;
+    private List<Vector2Int> dangerZone = new List<Vector2Int>();
 
+    public List<Vector2Int> DangerZone
+    {
+        get
+        {
+            return dangerZone;
+        }
+    }
     //for test
     private float curSizeTile;
     private float curYOffset;
@@ -66,7 +75,6 @@ public class Chessboard : MonoBehaviour
         _instance = this;
         GenerateAllTiles(tileSize, TILE_COUNT_X, TILE_COUNT_Y);
         SpawnAllChessPieces();
-        turn = true;
     }
     private void Update()
     {
@@ -91,19 +99,19 @@ public class Chessboard : MonoBehaviour
             }
             if (Input.GetMouseButtonUp(0))
             {
-                if (chessPieces[curHover.x, curHover.y] != null && chessPieces[curHover.x, curHover.y].team == Convert.ToInt32(turn))
+                ClearHint();
+                curSelected = chessPieces[curHover.x, curHover.y];
+                if (curSelected != null)
                 {
+                    if(curSelected.team == turn % 2)
                     if(checkingChess == null || curSelected.type == ChessPieceType.King)
                     {
-                        ClearHint();
-                        curSelected = chessPieces[curHover.x, curHover.y];
                         curSelected.GetAvailableMoves();
                         specialMove = curSelected.GetSpecialMove(ref chessPieces, ref movesList);
                         DisplayHint();
                     }    
                 }
             }
-
         }
         if (Physics.Raycast(ray, out info, 100, LayerMask.GetMask("Desired")))
         {
@@ -116,8 +124,7 @@ public class Chessboard : MonoBehaviour
             {
                 Vector2Int hitPosition = MousePositionToBoardIndex(info.transform.gameObject);
                 MoveTo(hitPosition);
-                ClearHint();
-                turn = !turn;
+                turn++;
             }
         }
         // for test
@@ -251,33 +258,34 @@ public class Chessboard : MonoBehaviour
     }
     public void Promote(ChessPieceType type)
     {
-        turn = !turn;
+        turn++;
         Vector2Int[] promotionPos = movesList[movesList.Count - 1];
         ChessPiece pawn = chessPieces[promotionPos[1].x, promotionPos[1].y];
         pawn.x = -1; pawn.y = -1;
         pawn.gameObject.SetActive(false);
-        chessPieces[promotionPos[1].x, promotionPos[1].y] = SpawnSinglePiece(type, turn ? 1 : 0);
+        chessPieces[promotionPos[1].x, promotionPos[1].y] = SpawnSinglePiece(type, turn % 2);
         chessPieces[promotionPos[1].x, promotionPos[1].y].isPromoted = true;
         allChessPieces.Add(chessPieces[promotionPos[1].x, promotionPos[1].y]);
         ChessPiecePositioning(promotionPos[1].x, promotionPos[1].y);
     }
     // Chesspiece positioning
-    private void MoveTo(Vector2Int postion)
+    private void MoveTo(Vector2Int position)
     {
-        ChessPiece cp = chessPieces[postion.x, postion.y];
-        if (cp != null)
-        {
-            EliminateChessPiece(cp);
-        }
-        movesList.Add(new Vector2Int[] { new Vector2Int(curSelected.x, curSelected.y), postion });
-        chessPieces[postion.x, postion.y] = chessPieces[curSelected.x, curSelected.y];
+        ClearHint();
+        ChessPiece cp = chessPieces[position.x, position.y];
+        EliminateChessPiece(cp);
+        movesList.Add(new Vector2Int[] { new Vector2Int(curSelected.x, curSelected.y), position });
+        chessPieces[position.x, position.y] = chessPieces[curSelected.x, curSelected.y];
         chessPieces[curSelected.x, curSelected.y] = null;
-        ChessPiecePositioning(postion.x, postion.y);
+        ChessPiecePositioning(position.x, position.y);
         ProcessingSpecialMove();
+        CalculateDangerZone(turn % 2);
     }    
     private void EliminateChessPiece(ChessPiece cp)
     {
+        if (cp == null) return;
         chessPieces[cp.x, cp.y] = null;
+        cp.isDead = true;
         if (cp.team == 0)
         {
             cp.SetPosition(GetCenterTile(0, 7, cp.type == ChessPieceType.Pawn) - new Vector3(2 * tileSize, 2, deathWhite.Count * deathSpace - tileSize));
@@ -342,12 +350,7 @@ public class Chessboard : MonoBehaviour
     {
         List<Vector2Int> moves = curSelected.AvailableMoves;
         for(int i = 0; i < moves.Count; i++)
-        {
-            if (Checking(moves[i].x, moves[i].y))
-            {
-                Debug.LogError("CHECKING!!!");
-                Prevent();
-            }    
+        {   
             SetTileLayer(moves[i].x, moves[i].y, Layer.Desired);
         }
     }
@@ -360,37 +363,63 @@ public class Chessboard : MonoBehaviour
             SetTileLayer(moves[i].x, moves[i].y, Layer.Tile);
         }
     }
-    private void SetTileLayer(int x, int y, Layer layer)
+    private void SetTileLayer(int x, int y, Layer layer, bool changeMask = true)
     {
-        chessBoard[x, y].layer = LayerMask.NameToLayer(layer.ToString());
+        if(changeMask)
+            chessBoard[x, y].layer = LayerMask.NameToLayer(layer.ToString());
         chessBoard[x, y].GetComponent<MeshRenderer>().material = tileMaterials[(int)layer];
     }
     // Checking legal moves
+    private void CalculateDangerZone(int team)
+    {
+        dangerZone.Clear();
+        for (int i = 0; i < TILE_COUNT_X; i++)
+        {
+            for (int j = 0; j < TILE_COUNT_Y; j++)
+            {
+                SetTileLayer(i, j, Layer.Tile);
+            }
+        }
+        checkingChess = null;
+        foreach (var cp in allChessPieces)
+        {
+            if (!IsValidPos(cp.x, cp.y) || cp.isDead) continue;
+            if(cp.team == team)
+            {
+                cp.GetAvailableMoves();
+                Debug.LogError(cp.AvailableMoves.Count);
+            }
+        }
+        Debug.LogError(dangerZone.Count);
+        foreach (var pos in dangerZone)
+        {
+            SetTileLayer(pos.x, pos.y, Layer.Danger, false);
+        }
+    }  
+    public void AddToDangerZone(Vector2Int pos)
+    {
+        dangerZone.Add(pos);
+    }    
     public bool CanMove(int x, int y, int team)
     {
         return IsValidPos(x, y) && (chessPieces[x, y] == null || chessPieces[x, y].team != team);
     }
-    public bool CollideOpponent(int x, int y, int team)
+    public bool CollideOpponent(ChessPiece checker, int x, int y, int team)
     {
-        return chessPieces[x, y] != null && chessPieces[x, y].team != team;
+        ChessPiece opponent = chessPieces[x, y];
+        bool collided = opponent != null && opponent.team != team;
+        if (opponent != null && opponent.type == ChessPieceType.King)
+        {
+            Debug.LogError("CHECKED!!!");
+            checkingChess = checker;
+        }
+        return collided;
     }
     public bool IsValidPos(int x, int y)
     {
         return x >= 0 && x <= 7 && y >= 0 && y <= 7;
-    }
-    private bool Checking(int x, int y)
-    {
-        if(chessPieces[x, y].type == ChessPieceType.King)
-        {
-            checkingChess = curSelected;
-        }    
-        return chessPieces[x, y].type == ChessPieceType.King;
-    }    
-    // Game operations
-    private void Prevent()
-    {
-        Debug.LogError("Only king is alowed to move");
-    }    
+    }   
+    // Game operations   
     public void ResetChessBoard()
     {
         ResetAllChessPieces();

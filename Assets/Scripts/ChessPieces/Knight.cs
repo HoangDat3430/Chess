@@ -13,42 +13,58 @@ public class Knight : ChessPiece
         Vector2Int movePos = new Vector2Int(this.x + 1, this.y + 2);
         if (CanMove(movePos.x, movePos.y, team))
         {
+            CollideOpponent(movePos.x, movePos.y, team);
             availableMoves.Add(movePos);
+            AddDangerZone(movePos);
         }
         movePos = new Vector2Int(this.x + 1, this.y - 2);
         if (CanMove(movePos.x, movePos.y, team))
         {
+            CollideOpponent(movePos.x, movePos.y, team);
             availableMoves.Add(movePos);
+            AddDangerZone(movePos);
         }
         movePos = new Vector2Int(this.x - 1, this.y + 2);
         if (CanMove(movePos.x, movePos.y, team))
         {
+            CollideOpponent(movePos.x, movePos.y, team);
             availableMoves.Add(movePos);
+            AddDangerZone(movePos);
         }
         movePos = new Vector2Int(this.x - 1, this.y - 2);
         if (CanMove(movePos.x, movePos.y, team))
         {
+            CollideOpponent(movePos.x, movePos.y, team);
             availableMoves.Add(movePos);
+            AddDangerZone(movePos);
         }
         movePos = new Vector2Int(this.x + 2, this.y + 1);
         if (CanMove(movePos.x, movePos.y, team))
         {
+            CollideOpponent(movePos.x, movePos.y, team);
             availableMoves.Add(movePos);
+            AddDangerZone(movePos);
         }
         movePos = new Vector2Int(this.x + 2, this.y - 1);
         if (CanMove(movePos.x, movePos.y, team))
         {
+            CollideOpponent(movePos.x, movePos.y, team);
             availableMoves.Add(movePos);
+            AddDangerZone(movePos);
         }
         movePos = new Vector2Int(this.x - 2, this.y + 1);
         if (CanMove(movePos.x, movePos.y, team))
         {
+            CollideOpponent(movePos.x, movePos.y, team);
             availableMoves.Add(movePos);
+            AddDangerZone(movePos);
         }
         movePos = new Vector2Int(this.x - 2, this.y - 1);
         if (CanMove(movePos.x, movePos.y, team))
         {
+            CollideOpponent(movePos.x, movePos.y, team);
             availableMoves.Add(movePos);
+            AddDangerZone(movePos);
         }
     }
 }

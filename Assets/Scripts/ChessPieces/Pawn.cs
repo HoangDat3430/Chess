@@ -28,13 +28,23 @@ public class Pawn : ChessPiece
                 }
             }
         }
-        if (CanMove(movePos.x + 1, movePos.y, team) && CollideOpponent(movePos.x + 1, movePos.y, team))
+        Vector2Int atkPos = new Vector2Int(movePos.x + 1, movePos.y);
+        if (CanMove(atkPos.x, movePos.y, team))
         {
-            availableMoves.Add(new Vector2Int(movePos.x + 1, movePos.y));
+            AddDangerZone(atkPos);
+            if(CollideOpponent(atkPos.x, movePos.y, team))
+            {
+                availableMoves.Add(atkPos);
+            }
         }
-        if (CanMove(movePos.x - 1, movePos.y, team) && CollideOpponent(movePos.x - 1, movePos.y, team))
+        atkPos = new Vector2Int(movePos.x - 1, movePos.y);
+        if (CanMove(atkPos.x, movePos.y, team))
         {
-            availableMoves.Add(new Vector2Int(movePos.x - 1, movePos.y));
+            AddDangerZone(atkPos);
+            if (CollideOpponent(atkPos.x, movePos.y, team))
+            {
+                availableMoves.Add(atkPos);
+            }
         }
     }
     public override SpecialMove GetSpecialMove(ref ChessPiece[,] board, ref List<Vector2Int[]> movedList)
