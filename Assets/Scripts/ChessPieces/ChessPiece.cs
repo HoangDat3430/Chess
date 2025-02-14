@@ -82,90 +82,90 @@ public class ChessPiece : MonoBehaviour
     {
         for (int x = dynamicX + 1; x <= 7; x++)
         {
-            if (!CanMove(x, staticY, team)) break;
+            if (!CanMove(x, staticY)) break;
             Vector2Int pos = new Vector2Int(x, staticY);
             availableMoves.Add(pos);
             AddDangerZone(pos);
-            if (CollideOpponent(x, staticY, team)) break;
+            if (CollideOpponent(x, staticY)) break;
         }
         for (int x = dynamicX - 1; x >= 0; x--)
         {
-            if (!CanMove(x, staticY, team)) break;
+            if (!CanMove(x, staticY)) break;
             Vector2Int pos = new Vector2Int(x, staticY);
             availableMoves.Add(pos);
             AddDangerZone(pos);
-            if (CollideOpponent(x, staticY, team)) break;
+            if (CollideOpponent(x, staticY)) break;
         }
     }
     protected void GetVerticalPath(int dynamicY, int staticX)
     {
         for (int y = dynamicY + 1; y <= 7; y++)
         {
-            if (!CanMove(staticX, y, team)) break;
+            if (!CanMove(staticX, y)) break;
             Vector2Int pos = new Vector2Int(staticX, y);
             availableMoves.Add(pos);
             AddDangerZone(pos);
-            if (CollideOpponent(staticX, y, team)) break;
+            if (CollideOpponent(staticX, y)) break;
         }
         for (int y = dynamicY - 1; y >= 0; y--)
         {
-            if (!CanMove(staticX, y, team)) break;
+            if (!CanMove(staticX, y)) break;
             Vector2Int pos = new Vector2Int(staticX, y);
             availableMoves.Add(pos);
             AddDangerZone(pos);
-            if (CollideOpponent(staticX, y, team)) break;
+            if (CollideOpponent(staticX, y)) break;
         }
     }
     protected void GetAllDiagnosePaths()
     {
         for (int x = this.x + 1, y = this.y + 1; x <= 7 && y <= 7; x++, y++)
         {
-            if (!CanMove(x, y, team)) break;
+            if (!CanMove(x, y)) break;
             Vector2Int pos = new Vector2Int(x, y);
             availableMoves.Add(pos);
             AddDangerZone(pos);
-            if (CollideOpponent(x, y, team)) break;
+            if (CollideOpponent(x, y)) break;
         }
         for (int x = this.x - 1, y = this.y + 1; x >= 0 && y <= 7; x--, y++)
         {
-            if (!CanMove(x, y, team)) break;
+            if (!CanMove(x, y)) break;
             Vector2Int pos = new Vector2Int(x, y);
             availableMoves.Add(pos);
             AddDangerZone(pos);
-            if (CollideOpponent(x, y, team)) break;
+            if (CollideOpponent(x, y)) break;
         }
         for (int y = this.y - 1, x = this.x + 1; y >= 0 && x <= 7; y--, x++)
         {
-            if (!CanMove(x, y, team)) break;
+            if (!CanMove(x, y)) break;
             Vector2Int pos = new Vector2Int(x, y);
             availableMoves.Add(pos);
             AddDangerZone(pos);
-            if (CollideOpponent(x, y, team)) break;
+            if (CollideOpponent(x, y)) break;
         }
         for (int y = this.y - 1, x = this.x - 1; y >= 0 && x >= 0; y--, x--)
         {
-            if (!CanMove(x, y, team)) break;
+            if (!CanMove(x, y)) break;
             Vector2Int pos = new Vector2Int(x, y);
             availableMoves.Add(pos);
             AddDangerZone(pos);
-            if (CollideOpponent(x, y, team)) break;
+            if (CollideOpponent(x, y)) break;
         }
     }
     public void SetInitPos(Vector2Int pos)
     {
         InitialPos = pos;
     }  
-    protected bool CanMove(int x, int y, int team)
+    protected bool CanMove(int x, int y)
     {
-        return Chessboard.Instance.CanMove(x, y, team);
+        return Chessboard.Instance.CanMove(this, x, y, team);
     }
-    protected bool CollideOpponent(int x, int y, int team)
+    protected bool CollideOpponent(int x, int y)
     {
         return Chessboard.Instance.CollideOpponent(this, x, y, team);
     }
     protected void AddDangerZone(Vector2Int pos)
     {
-        Chessboard.Instance.AddToDangerZone(pos);
+        Chessboard.Instance.AddToDangerZone(team, pos);
         Debug.LogError(pos, this);
-    }    
+    }     
 }

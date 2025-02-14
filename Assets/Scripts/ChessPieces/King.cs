@@ -17,9 +17,9 @@ public class King : ChessPiece
         for (int i = 0; i < directions.Length; i++)
         {
             Vector2Int movePos = new Vector2Int(x + directions[i].x, y + directions[i].y);
-            if (CanMove(movePos.x, movePos.y, team))
+            if (CanMove(movePos.x, movePos.y))
             {
-                if(!Chessboard.Instance.DangerZone.Contains(movePos))
+                if(!Chessboard.Instance.GetRivalDangerZone().Contains(movePos))
                 {
                     availableMoves.Add(movePos);
                     AddDangerZone(movePos);

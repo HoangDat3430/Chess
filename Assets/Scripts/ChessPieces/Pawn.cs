@@ -15,33 +15,33 @@ public class Pawn : ChessPiece
     {
         base.GetAvailableMoves();
         Vector2Int movePos = new Vector2Int(x, y + (team == 1 ? 1 : -1));
-        if (CanMove(movePos.x, movePos.y, team) && !CollideOpponent(movePos.x, movePos.y, team))
+        if (CanMove(movePos.x, movePos.y) && !CollideOpponent(movePos.x, movePos.y))
         {
             availableMoves.Add(new Vector2Int(movePos.x, movePos.y));
             // First move of a pawn can through 2 tiles
             if (y == InitialPos.y)
             {
                 Vector2Int fstMove = new Vector2Int(movePos.x, movePos.y + (team == 1 ? 1 : -1));
-                if (CanMove(fstMove.x, fstMove.y, team) && !CollideOpponent(fstMove.x, fstMove.y, team))
+                if (CanMove(fstMove.x, fstMove.y) && !CollideOpponent(fstMove.x, fstMove.y))
                 {
                     availableMoves.Add(new Vector2Int(fstMove.x, fstMove.y));
                 }
             }
         }
         Vector2Int atkPos = new Vector2Int(movePos.x + 1, movePos.y);
-        if (CanMove(atkPos.x, movePos.y, team))
+        if (CanMove(atkPos.x, atkPos.y))
         {
             AddDangerZone(atkPos);
-            if(CollideOpponent(atkPos.x, movePos.y, team))
+            if(CollideOpponent(atkPos.x, atkPos.y))
             {
                 availableMoves.Add(atkPos);
             }
         }
         atkPos = new Vector2Int(movePos.x - 1, movePos.y);
-        if (CanMove(atkPos.x, movePos.y, team))
+        if (CanMove(atkPos.x, atkPos.y))
         {
             AddDangerZone(atkPos);
-            if (CollideOpponent(atkPos.x, movePos.y, team))
+            if (CollideOpponent(atkPos.x, atkPos.y))
             {
                 availableMoves.Add(atkPos);
             }
