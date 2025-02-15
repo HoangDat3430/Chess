@@ -67,6 +67,8 @@ public class Chessboard : MonoBehaviour
         _instance = this;
         GenerateAllTiles(tileSize, TILE_COUNT_X, TILE_COUNT_Y);
         SpawnAllChessPieces();
+        dangerZone[0] = new List<Vector2Int>();
+        dangerZone[1] = new List<Vector2Int>();
     }
     private void Update()
     {
@@ -244,11 +246,11 @@ public class Chessboard : MonoBehaviour
                 }
                 break;
         }
+        turn++;
         specialMove = SpecialMove.None;
     }
     public void Promote(ChessPieceType type)
     {
-        turn++;
         Vector2Int[] promotionPos = movesList[movesList.Count - 1];
         ChessPiece pawn = chessPieces[promotionPos[1].x, promotionPos[1].y];
         pawn.x = -1; pawn.y = -1;
@@ -271,8 +273,11 @@ public class Chessboard : MonoBehaviour
         chessPieces[curSelected.x, curSelected.y] = null;
         ChessPiecePositioning(position.x, position.y);
         ProcessingSpecialMove();
-        CalculateDangerZone(turn % 2);
-        turn++;
+        if (CalculateDangerZone(turn % 2 == 0 ? 1 : 0))
+        {
+            Debug.LogError(string.Format("CHECKED TEAM {0}", turn % 2 == 0 ? "Black" : "White"));
+            CheckMate(turn % 2);
+        }
     }
     private void EliminateChessPiece(ChessPiece cp)
     {
@@ -290,10 +295,6 @@ public class Chessboard : MonoBehaviour
             cp.SetPosition(GetCenterTile(7, 0, cp.type == ChessPieceType.Pawn) + new Vector3(2 * tileSize, -2, deathBlack.Count * deathSpace - tileSize));
             deathBlack.Add(cp);
             cp.SetScale(deathScale);
-        }
-        if (cp.type == ChessPieceType.King)
-        {
-            UIManager.Instance.ShowResult(cp.team);
         }
     }
     private void PositioningAllChessPieces()
@@ -343,7 +344,7 @@ public class Chessboard : MonoBehaviour
     {
         List<Vector2Int> moves = curSelected.AvailableMoves;
         for(int i = 0; i < moves.Count; i++)
-        {   
+        {
             SetTileLayer(moves[i].x, moves[i].y, Layer.Desired);
         }
     }
@@ -365,62 +366,69 @@ public class Chessboard : MonoBehaviour
     // Checking legal moves
     private bool CalculateDangerZone(int team)
     {
-        dangerZone.Clear();
-        bool kingIsDanger = false;
-        for (int i = 0; i < TILE_COUNT_X; i++)
-        {
-            for (int j = 0; j < TILE_COUNT_Y; j++)
-            {
-                SetTileLayer(i, j, Layer.Tile);
-            }
-        }
+        dangerZone[team].Clear();
         foreach (var cp in allChessPieces)
         {
             if (!IsValidPos(cp.x, cp.y) || cp.isDead) continue;
-            if(cp.team == team)
+            if (cp.team == team)
             {
                 cp.GetAvailableMoves();
             }
-        }
+        }   
         foreach (var pos in dangerZone[team])
         {
             ChessPiece cp = chessPieces[pos.x, pos.y];
-            if (cp != null && cp.type != ChessPieceType.King && cp.team != team)
+            if (cp != null && cp.type == ChessPieceType.King)
             {
-                kingIsDanger = true;
-            }    
+                return true;
+            }
             SetTileLayer(pos.x, pos.y, Layer.Danger, false);
         }
-        return kingIsDanger;
+        return false;
     }  
+    private void CheckMate(int team)
+    {
+        bool flag = true;
+        foreach (var cp in allChessPieces)
+        {
+            if (!IsValidPos(cp.x, cp.y) || cp.isDead) continue;
+            if (cp.team == team)
+            {
+                cp.GetAvailableMoves();
+                if (cp.AvailableMoves.Count > 0)
+                {
+                    flag = false;
+                }
+            }
+        }
+        if (flag)
+        {
+            UIManager.Instance.ShowResult(team);
+        }
+    }
     public void AddToDangerZone(int team, Vector2Int pos)
     {
         dangerZone[team].Add(pos);
-    }    
-    public List<Vector2Int> GetRivalDangerZone()
-    {
-        return dangerZone[turn%2-1];
-    }    
+    }      
     public bool CanMove(ChessPiece cp, int x, int y, int team)
     {
-        if (IsValidPos(x, y) && (chessPieces[x, y] == null || chessPieces[x, y].team != team)) return false;
-        ChessPiece enemy = chessPieces[x, y];   
-        chessPieces[cp.x, cp.y] = null;
-        chessPieces[x, y] = cp;
-        if (CalculateDangerZone(team == 0 ? 1 : 0)) return false;
-        chessPieces[x, y] = enemy;
-        chessPieces[cp.x, cp.y] = cp;
-        return true;
+        if (!IsValidPos(x, y) || (chessPieces[x, y] != null && chessPieces[x, y].team == team)) return false;
+        bool flag = true;
+        if(turn % 2 == team)
+        {
+            ChessPiece enemy = chessPieces[x, y];
+            chessPieces[cp.x, cp.y] = null;
+            chessPieces[x, y] = cp;
+            if (CalculateDangerZone(turn % 2 == 0 ? 1 : 0)) flag = false;
+            chessPieces[cp.x, cp.y] = cp;
+            chessPieces[x, y] = enemy;
+        }    
+        return flag;
     }
-    public bool CollideOpponent(ChessPiece checker, int x, int y, int team)
+    public bool CollideOpponent(int x, int y, int team)
     {
         ChessPiece opponent = chessPieces[x, y];
-        bool collided = opponent != null && opponent.team != team;
-        if (opponent != null && opponent.type == ChessPieceType.King)
-        {
-            Debug.LogError("CHECKED!!!");
-        }
-        return collided;
+        return opponent != null && opponent.team != team;
     }
     public bool IsValidPos(int x, int y)
     {

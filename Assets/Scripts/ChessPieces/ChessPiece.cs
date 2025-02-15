@@ -161,7 +161,7 @@ public class ChessPiece : MonoBehaviour
     }
     protected bool CollideOpponent(int x, int y)
     {
-        return Chessboard.Instance.CollideOpponent(this, x, y, team);
+        return Chessboard.Instance.CollideOpponent(x, y, team);
     }
     protected void AddDangerZone(Vector2Int pos)
     {
