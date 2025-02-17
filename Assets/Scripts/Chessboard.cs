@@ -255,10 +255,9 @@ public class Chessboard : MonoBehaviour
         ChessPiece pawn = chessPieces[promotionPos[1].x, promotionPos[1].y];
         pawn.x = -1; pawn.y = -1;
         pawn.gameObject.SetActive(false);
-        ChessPiece newChess = SpawnSinglePiece(type, turn % 2);
+        ChessPiece newChess = SpawnSinglePiece(type, (turn - 1) % 2);
         chessPieces[promotionPos[1].x, promotionPos[1].y] = newChess;
         newChess.isPromoted = true;
-        allChessPieces.Add(newChess);
         ChessPiecePositioning(promotionPos[1].x, promotionPos[1].y);
         newChess.GetAvailableMoves();
     }
@@ -367,9 +366,9 @@ public class Chessboard : MonoBehaviour
     private bool CalculateDangerZone(int team)
     {
         dangerZone[team].Clear();
-        foreach (var cp in allChessPieces)
+        foreach (var cp in chessPieces)
         {
-            if (!IsValidPos(cp.x, cp.y) || cp.isDead) continue;
+            if (cp == null || !IsValidPos(cp.x, cp.y) || cp.isDead) continue;
             if (cp.team == team)
             {
                 cp.GetAvailableMoves();
@@ -382,7 +381,7 @@ public class Chessboard : MonoBehaviour
             {
                 return true;
             }
-            SetTileLayer(pos.x, pos.y, Layer.Danger, false);
+            //SetTileLayer(pos.x, pos.y, Layer.Danger, false);
         }
         return false;
     }  
@@ -424,6 +423,10 @@ public class Chessboard : MonoBehaviour
             chessPieces[x, y] = enemy;
         }    
         return flag;
+    }
+    public bool CollideAlly(int x, int y, int team)
+    {
+        return chessPieces[x, y] != null && chessPieces[x, y].team == team; 
     }
     public bool CollideOpponent(int x, int y, int team)
     {

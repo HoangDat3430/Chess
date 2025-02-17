@@ -51,7 +51,7 @@ public class ChessPiece : MonoBehaviour
     }
     public virtual void GetAvailableMoves()
     {
-        Debug.LogError(string.Format("Selected {0} of team {1} at X:{2}, Y:{3}", type, team, x, y));
+        Debug.Log(string.Format("Selected {0} of team {1} at X:{2}, Y:{3}", type, team, x, y));
         availableMoves.Clear();
     }
     public virtual SpecialMove GetSpecialMove(ref ChessPiece[,] board, ref List<Vector2Int[]> movedList)
@@ -82,7 +82,8 @@ public class ChessPiece : MonoBehaviour
     {
         for (int x = dynamicX + 1; x <= 7; x++)
         {
-            if (!CanMove(x, staticY)) break;
+            if (CollideAlly(x, staticY)) break;
+            if (!CanMove(x, staticY)) continue;
             Vector2Int pos = new Vector2Int(x, staticY);
             availableMoves.Add(pos);
             AddDangerZone(pos);
@@ -90,7 +91,8 @@ public class ChessPiece : MonoBehaviour
         }
         for (int x = dynamicX - 1; x >= 0; x--)
         {
-            if (!CanMove(x, staticY)) break;
+            if (CollideAlly(x, staticY)) break;
+            if (!CanMove(x, staticY)) continue;
             Vector2Int pos = new Vector2Int(x, staticY);
             availableMoves.Add(pos);
             AddDangerZone(pos);
@@ -101,7 +103,8 @@ public class ChessPiece : MonoBehaviour
     {
         for (int y = dynamicY + 1; y <= 7; y++)
         {
-            if (!CanMove(staticX, y)) break;
+            if (CollideAlly(staticX, y)) break;
+            if (!CanMove(staticX, y)) continue;
             Vector2Int pos = new Vector2Int(staticX, y);
             availableMoves.Add(pos);
             AddDangerZone(pos);
@@ -109,7 +112,8 @@ public class ChessPiece : MonoBehaviour
         }
         for (int y = dynamicY - 1; y >= 0; y--)
         {
-            if (!CanMove(staticX, y)) break;
+            if (CollideAlly(staticX, y)) break;
+            if (!CanMove(staticX, y)) continue;
             Vector2Int pos = new Vector2Int(staticX, y);
             availableMoves.Add(pos);
             AddDangerZone(pos);
@@ -120,7 +124,8 @@ public class ChessPiece : MonoBehaviour
     {
         for (int x = this.x + 1, y = this.y + 1; x <= 7 && y <= 7; x++, y++)
         {
-            if (!CanMove(x, y)) break;
+            if (CollideAlly(x, y)) break;
+            if (!CanMove(x, y)) continue;
             Vector2Int pos = new Vector2Int(x, y);
             availableMoves.Add(pos);
             AddDangerZone(pos);
@@ -128,7 +133,8 @@ public class ChessPiece : MonoBehaviour
         }
         for (int x = this.x - 1, y = this.y + 1; x >= 0 && y <= 7; x--, y++)
         {
-            if (!CanMove(x, y)) break;
+            if (CollideAlly(x, y)) break;
+            if (!CanMove(x, y)) continue;
             Vector2Int pos = new Vector2Int(x, y);
             availableMoves.Add(pos);
             AddDangerZone(pos);
@@ -136,7 +142,8 @@ public class ChessPiece : MonoBehaviour
         }
         for (int y = this.y - 1, x = this.x + 1; y >= 0 && x <= 7; y--, x++)
         {
-            if (!CanMove(x, y)) break;
+            if (CollideAlly(x, y)) break;
+            if (!CanMove(x, y)) continue;
             Vector2Int pos = new Vector2Int(x, y);
             availableMoves.Add(pos);
             AddDangerZone(pos);
@@ -144,7 +151,8 @@ public class ChessPiece : MonoBehaviour
         }
         for (int y = this.y - 1, x = this.x - 1; y >= 0 && x >= 0; y--, x--)
         {
-            if (!CanMove(x, y)) break;
+            if (CollideAlly(x, y)) break;
+            if (!CanMove(x, y)) continue;
             Vector2Int pos = new Vector2Int(x, y);
             availableMoves.Add(pos);
             AddDangerZone(pos);
@@ -163,9 +171,12 @@ public class ChessPiece : MonoBehaviour
     {
         return Chessboard.Instance.CollideOpponent(x, y, team);
     }
+    protected bool CollideAlly(int x, int y)
+    {
+        return Chessboard.Instance.CollideAlly(x, y, team);
+    }
     protected void AddDangerZone(Vector2Int pos)
     {
         Chessboard.Instance.AddToDangerZone(team, pos);
-        Debug.LogError(pos, this);
     }     
 }
