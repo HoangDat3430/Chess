@@ -8,6 +8,8 @@ public class UIManager : MonoBehaviour
 
     [SerializeField] private GameObject victoryScreen;
     [SerializeField] private GameObject promotionScreen;
+    [SerializeField] Animator uiAnimatior;
+    [SerializeField] GameObject chessboard;
     public static UIManager Instance
     {
         get
@@ -23,16 +25,35 @@ public class UIManager : MonoBehaviour
     {
         _instance = this;
     }
-    // Start is called before the first frame update
-    void Start()
+    public void OnLocalGameButtonClick()
     {
-        
+        uiAnimatior.SetTrigger("GameStart");
+        Instantiate(chessboard);
     }
-
-    // Update is called once per frame
-    void Update()
+    public void OnOnlineGameButtonClick()
     {
-        
+        uiAnimatior.SetTrigger("OnlineMenu");
+    }
+    public void OnConnectButtonClick()
+    {
+
+    }
+    public void OnHostButtonClick()
+    {
+        uiAnimatior.SetTrigger("HostMenu");
+    }
+    public void OnOnlineBackButtonClick()
+    {
+        if(Chessboard.Instance != null)
+        {
+            Destroy(Chessboard.Instance.gameObject);
+        }
+        victoryScreen.SetActive(false);
+        uiAnimatior.SetTrigger("GameMenu");
+    }
+    public void OnHostBackButtonClick()
+    {
+        uiAnimatior.SetTrigger("OnlineMenu");
     }
     public void ShowPromoteUI()
     {
