@@ -1,16 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using Unity.Collections;
+using Unity.Networking.Transport;
 using UnityEngine;
 
-public enum OpCode
-{
-    CheckAlive,
-    Welcome,
-    GameStart,
-    Move,
-    Remactch
-}
+
 public class NetworkMessage
 {
     public OpCode Code { get; set; }
@@ -20,4 +14,15 @@ public class NetworkMessage
         writer.WriteByte((byte)Code);
     }
 
+    public virtual void Deserialize(DataStreamReader reader)
+    {
+        Code = (OpCode)reader.ReadByte();
+    }
+    public virtual void ReceiveOnClient()
+    {
+
+    }
+    public virtual void ReceiveOnServer(NetworkConnection cnn)
+    {
+    }
 }

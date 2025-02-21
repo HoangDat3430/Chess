@@ -11,6 +11,9 @@ public class Server : MonoBehaviour
     public static Server Instance { get; private set; }
     private NetworkDriver driver;
     private NativeList<NetworkConnection> connections;
+
+    private const float KEEP_ALIVE_INTERVAL = 20.0f;
+    private float lastKeepAlive;
     private bool isActive;
 
     private Action connectionDropped;
@@ -32,6 +35,7 @@ public class Server : MonoBehaviour
         }
         connections = new NativeList<NetworkConnection>(2, Allocator.Persistent);
         isActive = true;
+        Debug.Log("Server started on port " + port); 
     }
     public void ShutDown()
     {
@@ -52,7 +56,10 @@ public class Server : MonoBehaviour
         {
             return;
         }
+        KeepAlive(); 
+
         driver.ScheduleUpdate().Complete();
+        
         CleanUpConnections();
         AcceptNewConnections();
         UpdateMessagePump();
@@ -90,6 +97,7 @@ public class Server : MonoBehaviour
             {
                 if (cmd == NetworkEvent.Type.Data)
                 {
+                    NetUtility.OnData(stream, connections[i], this);
                 }
                 else if (cmd == NetworkEvent.Type.Disconnect)
                 {
@@ -100,10 +108,19 @@ public class Server : MonoBehaviour
             }
         }
     }
+    private void KeepAlive()
+    {
+        if(Time.time - lastKeepAlive > KEEP_ALIVE_INTERVAL)
+        {
+            lastKeepAlive = Time.time;
+            BroadCast(new KeepAlive());
+        }
+    }
     public void SendToClient(NetworkConnection connection, NetworkMessage msg)
     {
         DataStreamWriter writer;
         driver.BeginSend(connection, out writer);
+        msg.Serialize(ref writer);
         driver.EndSend(writer);
     }
     public void BroadCast(NetworkMessage msg)

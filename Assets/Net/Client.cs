@@ -8,6 +8,7 @@ using UnityEngine;
 public class Client : MonoBehaviour
 {
     public static Client Instance { get; private set; }
+
     private NetworkDriver driver;
     private NetworkConnection connection;
     private bool isActive;
@@ -24,6 +25,7 @@ public class Client : MonoBehaviour
         connection = driver.Connect(endpoint);
         isActive = true;
         RegisterToEvent();
+        Debug.Log("Client connected to server " + endpoint.Address);
     }
     public void ShutDown()
     {
@@ -31,8 +33,8 @@ public class Client : MonoBehaviour
         {
             UnregisterToEvent();
             driver.Dispose();
-            connection = default(NetworkConnection);
             isActive = false;
+            connection = default(NetworkConnection);
         }
     }
     public void OnDestroy()
@@ -65,6 +67,7 @@ public class Client : MonoBehaviour
     {
         DataStreamWriter writer;
         driver.BeginSend(connection, out writer);
+        msg.Serialize(ref writer);
         driver.EndSend(writer);
     }
     private void UpdateMessagePump()
@@ -75,10 +78,12 @@ public class Client : MonoBehaviour
         {
             if (cmd == NetworkEvent.Type.Data)
             {
+                NetUtility.OnData(stream, connection);
             }
             else if(cmd == NetworkEvent.Type.Connect)
             {
-
+                Debug.Log("Connected to server");
+                SendToServer(new KeepAlive());
             }    
             else if (cmd == NetworkEvent.Type.Disconnect)
             {
@@ -90,9 +95,10 @@ public class Client : MonoBehaviour
     }
     private void RegisterToEvent()
     {
-
+        NetUtility.C_KEEP_ALIVE += OnKeepAlive;
     }
     private void UnregisterToEvent()
     {
+        NetUtility.C_KEEP_ALIVE -= OnKeepAlive;
     }
 }
