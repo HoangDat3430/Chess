@@ -8,6 +8,7 @@ public enum OpCode
     Welcome,
     GameStart,
     Move,
+    Result,
     Rematch
 }
 public static class NetUtility
@@ -16,12 +17,14 @@ public static class NetUtility
     public static Action<NetworkMessage> C_WELCOME;
     public static Action<NetworkMessage> C_GAME_START;
     public static Action<NetworkMessage> C_MOVE;
-    public static Action<NetworkMessage> C_Rematch;
+    public static Action<NetworkMessage> C_RESULT;
+    public static Action<NetworkMessage> C_REMATCH;
     public static Action<NetworkMessage, NetworkConnection> S_KEEP_ALIVE;
     public static Action<NetworkMessage, NetworkConnection> S_WELCOME;
     public static Action<NetworkMessage, NetworkConnection> S_GAME_START;
     public static Action<NetworkMessage, NetworkConnection> S_MOVE;
-    public static Action<NetworkMessage, NetworkConnection> S_Rematch;
+    public static Action<NetworkMessage, NetworkConnection> S_RESULT;
+    public static Action<NetworkMessage, NetworkConnection> S_REMATCH;
 
     public static void OnData(DataStreamReader reader, NetworkConnection cnn, Server server = null)
     {
@@ -30,7 +33,22 @@ public static class NetUtility
         switch (code)
         {
             case OpCode.KeepAlive:
-                msg = new KeepAlive(reader);
+                msg = new NetKeepAlive(reader);
+                break;
+            case OpCode.Welcome:
+                msg = new NetWelcome(reader);
+                break;
+            case OpCode.GameStart:
+                msg = new NetStartGame(reader);
+                break;
+            case OpCode.Move:
+                msg = new NetMove(reader);
+                break;
+            case OpCode.Result:
+                msg = new NetShowResult(reader);
+                break;
+            case OpCode.Rematch:
+                msg = new NetRematch(reader);
                 break;
             default:
                 break;

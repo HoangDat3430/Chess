@@ -16,11 +16,9 @@ public class NetworkMessage
 
     public virtual void Deserialize(DataStreamReader reader)
     {
-        Code = (OpCode)reader.ReadByte();
     }
     public virtual void ReceiveOnClient()
     {
-
     }
     public virtual void ReceiveOnServer(NetworkConnection cnn)
     {

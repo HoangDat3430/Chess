@@ -1,9 +1,6 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using Unity.Networking.Transport;
 using Unity.Collections;
-using System.Net;
 using System;
 
 public class Server : MonoBehaviour
@@ -16,18 +13,23 @@ public class Server : MonoBehaviour
     private float lastKeepAlive;
     private bool isActive;
 
+    public const ushort serverPort = 7777;
+    public const string ipAddress = "127.0.0.1";
+
     private Action connectionDropped;
+
+    private int rematchRequest = 0;
     private void Awake()
     {
         Instance = this;
     }
-    public void Init(ushort port)
+    public void Init()
     {
         driver = NetworkDriver.Create();
-        NetworkEndpoint endpoint = NetworkEndpoint.AnyIpv4;
+        NetworkEndpoint endpoint = NetworkEndpoint.AnyIpv4.WithPort(serverPort);
         if (driver.Bind(endpoint) != 0)
         {
-            Debug.Log("Failed to bind to port " + port);
+            Debug.Log("Failed to bind to port " + serverPort);
         }
         else
         {
@@ -35,12 +37,14 @@ public class Server : MonoBehaviour
         }
         connections = new NativeList<NetworkConnection>(2, Allocator.Persistent);
         isActive = true;
-        Debug.Log("Server started on port " + port); 
+        RegisterToEvent();
+        Debug.Log("Server started on port " + serverPort); 
     }
     public void ShutDown()
     {
         if (isActive)
         {
+            UnRegisterToEvent();
             driver.Dispose();
             connections.Dispose();
             isActive = false;
@@ -81,6 +85,13 @@ public class Server : MonoBehaviour
         while ((c = driver.Accept()) != default(NetworkConnection))
         {
             connections.Add(c);
+            NetWelcome msg = new NetWelcome();
+            msg.team = connections.Length-1;
+            SendToClient(c, msg);
+            if(connections.Length == 2)
+            {
+                BroadCast(new NetStartGame());
+            }
         }
     }
     private void UpdateMessagePump()
@@ -113,14 +124,14 @@ public class Server : MonoBehaviour
         if(Time.time - lastKeepAlive > KEEP_ALIVE_INTERVAL)
         {
             lastKeepAlive = Time.time;
-            BroadCast(new KeepAlive());
+            BroadCast(new NetKeepAlive());
         }
     }
     public void SendToClient(NetworkConnection connection, NetworkMessage msg)
     {
         DataStreamWriter writer;
         driver.BeginSend(connection, out writer);
-        msg.Serialize(ref writer);
+        msg.Serialize(ref writer);  
         driver.EndSend(writer);
     }
     public void BroadCast(NetworkMessage msg)
@@ -132,5 +143,34 @@ public class Server : MonoBehaviour
                 SendToClient(connections[i], msg);
             }
         }
+    }
+    private void OnMoveReq(NetworkMessage msg, NetworkConnection cnn)
+    {
+        BroadCast(msg);
+    }
+    private void OnShowResultReq(NetworkMessage msg, NetworkConnection cnn)
+    {
+        BroadCast(msg);
+    }
+    private void OnRematchReq(NetworkMessage msg, NetworkConnection cnn)
+    {
+        rematchRequest++;
+        if(rematchRequest == 2)
+        {
+            BroadCast(msg);
+            rematchRequest = 0;
+        }
+    }
+    private void RegisterToEvent()
+    {
+        NetUtility.S_MOVE += OnMoveReq;
+        NetUtility.S_RESULT += OnShowResultReq;
+        NetUtility.S_REMATCH += OnRematchReq;
+    }
+    private void UnRegisterToEvent()
+    {
+        NetUtility.S_MOVE -= OnMoveReq;
+        NetUtility.S_RESULT += OnShowResultReq;
+        NetUtility.S_REMATCH -= OnRematchReq;
     }
 }

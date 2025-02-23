@@ -115,7 +115,7 @@ Transform:
   - {fileID: 4000011245072044}
   - {fileID: 4000012227137046}
   m_Father: {fileID: 0}
-  m_RootOrder: 2
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: -89.98, y: 0, z: 0}
 --- !u!114 &1086300372370970764
 MonoBehaviour:
@@ -146,8 +146,9 @@ MonoBehaviour:
   - {fileID: 1000011613667446, guid: 126250ac95fb18b4881753dc3fe3c3c8, type: 3}
   - {fileID: 1000013557280178, guid: bc1252a24ebe0a34a8481e2bbe97aedf, type: 3}
   teamMaterials:
-  - {fileID: 2100000, guid: 72bd5ddbae7f0cb4fa0048a8ce58cc26, type: 2}
   - {fileID: 2100000, guid: ef69fb534f1b64b4683f12fabbc5ee5c, type: 2}
+  - {fileID: 2100000, guid: 72bd5ddbae7f0cb4fa0048a8ce58cc26, type: 2}
+  assignedTeam: 0
 --- !u!1 &1000012137082366
 GameObject:
   m_ObjectHideFlags: 0

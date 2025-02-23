@@ -1,6 +1,4 @@
 using System;
-using System.Collections;
-using System.Collections.Generic;
 using Unity.Collections;
 using Unity.Networking.Transport;
 using UnityEngine;
@@ -20,6 +18,7 @@ public class Client : MonoBehaviour
     }
     public void Init(string ip, ushort port)
     {
+        if (ip == string.Empty) ip = Server.ipAddress;
         driver = NetworkDriver.Create();
         NetworkEndpoint endpoint = NetworkEndpoint.Parse(ip, port);
         connection = driver.Connect(endpoint);
@@ -51,25 +50,6 @@ public class Client : MonoBehaviour
         CheckAlive();
         UpdateMessagePump();
     }
-    private void CheckAlive()
-    {
-        if (!connection.IsCreated && isActive)
-        {
-            connectionDropped?.Invoke();
-            ShutDown();
-        }
-    }
-    private void OnKeepAlive(NetworkMessage msg)
-    {
-        SendToServer(msg);
-    }
-    public void SendToServer(NetworkMessage msg)
-    {
-        DataStreamWriter writer;
-        driver.BeginSend(connection, out writer);
-        msg.Serialize(ref writer);
-        driver.EndSend(writer);
-    }
     private void UpdateMessagePump()
     {
         DataStreamReader stream;
@@ -83,8 +63,8 @@ public class Client : MonoBehaviour
             else if(cmd == NetworkEvent.Type.Connect)
             {
                 Debug.Log("Connected to server");
-                SendToServer(new KeepAlive());
-            }    
+                SendToServer(new NetKeepAlive());
+            }
             else if (cmd == NetworkEvent.Type.Disconnect)
             {
                 connection = default(NetworkConnection);
@@ -93,12 +73,65 @@ public class Client : MonoBehaviour
             }
         }
     }
+    private void CheckAlive()
+    {
+        if (!connection.IsCreated && isActive)
+        {
+            connectionDropped?.Invoke();
+            ShutDown();
+        }
+    }
+    public void SendToServer(NetworkMessage msg)
+    {
+        DataStreamWriter writer;
+        driver.BeginSend(connection, out writer);
+        msg.Serialize(ref writer);
+        driver.EndSend(writer);
+    }
+    private void OnKeepAliveRes(NetworkMessage msg)
+    {
+        SendToServer(msg);
+    }
+    private void OnWelcomeRes(NetworkMessage msg)
+    {
+        NetWelcome netWelcome = msg as NetWelcome;
+        Debug.Log("You are team: " + netWelcome.team);
+        GameMgr.Instance.AssignTeam(netWelcome.team);
+    }
+    private void OnGameStartRes(NetworkMessage msg)
+    {
+        Debug.Log("Game Started!!!");
+        GameMgr.Instance.StartGame();
+    }
+    private void OnMoveRes(NetworkMessage msg)
+    {
+        GameMgr.Instance.OnMoveRes(msg);
+    }
+    private void OnShowResultRes(NetworkMessage msg)
+    {
+        GameMgr.Instance.OnShowResultRes((NetShowResult)msg);
+    }
+    private void OnRematchRes(NetworkMessage msg)
+    {
+        GameMgr.Instance.OnRematchRes();
+    }
     private void RegisterToEvent()
     {
-        NetUtility.C_KEEP_ALIVE += OnKeepAlive;
+        NetUtility.C_KEEP_ALIVE += OnKeepAliveRes;
+        NetUtility.C_WELCOME += OnWelcomeRes;
+        NetUtility.C_GAME_START += OnGameStartRes;
+        NetUtility.C_MOVE += OnMoveRes;
+        NetUtility.C_RESULT += OnShowResultRes;
+        NetUtility.C_REMATCH += OnRematchRes;
+        connectionDropped += GameMgr.Instance.OnOnlineBackButtonClick;
     }
     private void UnregisterToEvent()
     {
-        NetUtility.C_KEEP_ALIVE -= OnKeepAlive;
+        NetUtility.C_KEEP_ALIVE -= OnKeepAliveRes;
+        NetUtility.C_WELCOME -= OnWelcomeRes;
+        NetUtility.C_GAME_START -= OnGameStartRes;
+        NetUtility.C_MOVE -= OnMoveRes;
+        NetUtility.C_RESULT -= OnShowResultRes;
+        connectionDropped -= GameMgr.Instance.OnOnlineBackButtonClick;
     }
 }

@@ -51,7 +51,7 @@ public class ChessPiece : MonoBehaviour
     }
     public virtual void GetAvailableMoves()
     {
-        Debug.Log(string.Format("Selected {0} of team {1} at X:{2}, Y:{3}", type, team, x, y));
+        //Debug.Log(string.Format("Selected {0} of team {1} at X:{2}, Y:{3}", type, team, x, y));
         availableMoves.Clear();
     }
     public virtual SpecialMove GetSpecialMove(ref ChessPiece[,] board, ref List<Vector2Int[]> movedList)

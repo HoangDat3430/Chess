@@ -1,6 +1,3 @@
-using UnityEditor;
-using UnityEngine;
-
 public class Rook : ChessPiece
 {
     public override void GetAvailableMoves()

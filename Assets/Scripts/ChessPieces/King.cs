@@ -1,8 +1,5 @@
 using System.Collections.Generic;
-using System.Runtime.InteropServices.WindowsRuntime;
-using UnityEditor;
 using UnityEngine;
-
 public class King : ChessPiece
 {
     public override void GetAvailableMoves()

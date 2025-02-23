@@ -1,14 +1,15 @@
 using Unity.Collections;
 using Unity.Networking.Transport;
-public class KeepAlive : NetworkMessage
+
+public class NetRematch : NetworkMessage
 {
-    public KeepAlive()
+    public NetRematch()
     {
-        Code = OpCode.KeepAlive;
+        Code = OpCode.Rematch;
     }
-    public KeepAlive(DataStreamReader reader)
+    public NetRematch(DataStreamReader reader)
     {
-        Code = OpCode.KeepAlive;
+        Code = OpCode.Rematch;
         Deserialize(reader);
     }
     public override void Serialize(ref DataStreamWriter writer)
@@ -20,10 +21,10 @@ public class KeepAlive : NetworkMessage
     }
     public override void ReceiveOnClient()
     {
-        NetUtility.C_KEEP_ALIVE?.Invoke(this);
+        NetUtility.C_REMATCH?.Invoke(this);
     }
     public override void ReceiveOnServer(NetworkConnection cnn)
     {
-        NetUtility.S_KEEP_ALIVE?.Invoke(this, cnn);
+        NetUtility.S_REMATCH?.Invoke(this, cnn);
     }
 }

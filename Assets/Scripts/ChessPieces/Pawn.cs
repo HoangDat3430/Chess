@@ -5,6 +5,7 @@ using UnityEngine;
 public class Pawn : ChessPiece
 {
     private Vector2Int EnPassantPos = new Vector2Int(-1, -1);
+    int yourTeam = GameMgr.Instance.YourTeam;
 
     protected override void Awake()
     {
@@ -14,14 +15,14 @@ public class Pawn : ChessPiece
     public override void GetAvailableMoves()
     {
         base.GetAvailableMoves();
-        Vector2Int movePos = new Vector2Int(x, y + (team == 1 ? 1 : -1));
+        Vector2Int movePos = new Vector2Int(x, y + (team == yourTeam ? 1 : -1));
         if (CanMove(movePos.x, movePos.y) && !CollideOpponent(movePos.x, movePos.y))
         {
             availableMoves.Add(new Vector2Int(movePos.x, movePos.y));
             // First move of a pawn can through 2 tiles
             if (y == InitialPos.y)
             {
-                Vector2Int fstMove = new Vector2Int(movePos.x, movePos.y + (team == 1 ? 1 : -1));
+                Vector2Int fstMove = new Vector2Int(movePos.x, movePos.y + (team == yourTeam ? 1 : -1));
                 if (CanMove(fstMove.x, fstMove.y) && !CollideOpponent(fstMove.x, fstMove.y))
                 {
                     availableMoves.Add(new Vector2Int(fstMove.x, fstMove.y));
@@ -66,7 +67,7 @@ public class Pawn : ChessPiece
                 {
                     if (lastMove[1].y == y)
                     {
-                        EnPassantPos = new Vector2Int(cp.x, y + (team == 1 ? 1 : -1));
+                        EnPassantPos = new Vector2Int(cp.x, y + (team == yourTeam ? 1 : -1));
                         availableMoves.Add(EnPassantPos);
                         return SpecialMove.EnPassant;
                     }
