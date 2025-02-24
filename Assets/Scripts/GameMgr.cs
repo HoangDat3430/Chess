@@ -78,15 +78,16 @@ public class GameMgr : MonoBehaviour
     }
     public void OnOnlineBackButtonClick()
     {
+        Debug.LogError(Chessboard.Instance != null);
         if(Chessboard.Instance != null)
         {
             server.ShutDown();
             client.ShutDown();
-            yourTeam = (int)CameraAngles.Menu;
             Destroy(Chessboard.Instance.gameObject);
         }
         victoryScreen.SetActive(false);
         uiAnimatior.SetTrigger("GameMenu");
+        SwitchCameraAngle(CameraAngles.Menu);
     }
     public void OnHostBackButtonClick()
     {
@@ -109,10 +110,10 @@ public class GameMgr : MonoBehaviour
     }
     public void StartGame(bool isLocal)
     {
-        uiAnimatior.SetTrigger("GameStart");
+        //uiAnimatior.SetTrigger("GameStart");
         isLocalGame = isLocal;
         Instantiate(chessboard);
-        SwitchCameraAngle();
+        SwitchCameraAngle((CameraAngles)yourTeam);
         matchEnd = false;
     }
     public void AssignTeam(int team)
@@ -162,14 +163,13 @@ public class GameMgr : MonoBehaviour
         Chessboard.Instance.ResetChessBoard();
         matchEnd = false;
     }
-    private void SwitchCameraAngle()
+    private void SwitchCameraAngle(CameraAngles angles)
     {
         for(int i = 0; i < cameraAngles.Length; i++)
         {
             cameraAngles[i].SetActive(false);
         }
-        Debug.LogError(yourTeam);
-        cameraAngles[yourTeam].SetActive(true);
+        cameraAngles[(int)angles].SetActive(true);
     }
     public void ExitGame()
     {
