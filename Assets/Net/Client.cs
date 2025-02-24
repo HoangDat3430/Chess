@@ -101,7 +101,7 @@ public class Client : MonoBehaviour
     private void OnGameStartRes(NetworkMessage msg)
     {
         Debug.Log("Game Started!!!");
-        GameMgr.Instance.StartGame();
+        GameMgr.Instance.StartGame(false);
     }
     private void OnMoveRes(NetworkMessage msg)
     {

@@ -8,6 +8,7 @@ public class NetMove : NetworkMessage
     public int oriPosY;
     public int desPosX;
     public int desPosY;
+    public int specialMove;
 
     public NetMove()
     {
@@ -26,6 +27,7 @@ public class NetMove : NetworkMessage
         writer.WriteInt(oriPosY);
         writer.WriteInt(desPosX);
         writer.WriteInt(desPosY);
+        writer.WriteInt(specialMove);
     }
     public override void Deserialize(DataStreamReader reader)
     {
@@ -34,6 +36,7 @@ public class NetMove : NetworkMessage
         oriPosY = reader.ReadInt();
         desPosX = reader.ReadInt();
         desPosY = reader.ReadInt();
+        specialMove = reader.ReadInt();
     }
     public override void ReceiveOnClient()
     {

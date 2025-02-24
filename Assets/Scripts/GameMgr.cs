@@ -10,7 +10,6 @@ public enum CameraAngles
 public class GameMgr : MonoBehaviour
 {
     private static GameMgr _instance;
-    private GameMgr() { }
 
     [SerializeField] private GameObject victoryScreen;
     [SerializeField] private GameObject promotionScreen;
@@ -23,15 +22,12 @@ public class GameMgr : MonoBehaviour
 
     private int yourTeam;
     private bool matchEnd = false;
+    private bool isLocalGame = false;
 
     public static GameMgr Instance
     {
         get
         {
-            if (_instance == null)
-            {
-                _instance = new GameMgr();
-            }
             return _instance;
         }
     }
@@ -49,6 +45,13 @@ public class GameMgr : MonoBehaviour
             return matchEnd;
         }
     }
+    public bool IsLocalGame
+    {
+        get
+        {
+            return isLocalGame;
+        }
+    }
     private void Awake()
     {
         _instance = this;
@@ -57,7 +60,7 @@ public class GameMgr : MonoBehaviour
     {
         server.Init();
         client.Init(Server.ipAddress, Server.serverPort);
-        StartGame();
+        StartGame(true);
     }
     public void OnOnlineGameButtonClick()
     {
@@ -104,9 +107,10 @@ public class GameMgr : MonoBehaviour
     {
         RematchReq();
     }
-    public void StartGame()
+    public void StartGame(bool isLocal)
     {
         uiAnimatior.SetTrigger("GameStart");
+        isLocalGame = isLocal;
         Instantiate(chessboard);
         SwitchCameraAngle();
         matchEnd = false;
@@ -115,7 +119,7 @@ public class GameMgr : MonoBehaviour
     {
         this.yourTeam = team;
     }
-    public void MoveReq(int turn, ChessPiece cp, Vector2Int desPos)
+    public void MoveReq(int turn, ChessPiece cp, Vector2Int desPos, SpecialMove specialMove)
     {
         NetMove netMove = new NetMove();
         netMove.turn = turn;
@@ -123,6 +127,7 @@ public class GameMgr : MonoBehaviour
         netMove.oriPosY = cp.y;
         netMove.desPosX = desPos.x;
         netMove.desPosY = desPos.y;
+        netMove.specialMove = (int)specialMove;
         client.SendToServer(netMove);
     }
     public void ShowResultReq(int teamWin)
@@ -140,7 +145,7 @@ public class GameMgr : MonoBehaviour
         NetMove netMove = msg as NetMove;
         Vector2Int oriPos = new Vector2Int(netMove.oriPosX, netMove.oriPosY);
         Vector2Int desPos = new Vector2Int(netMove.desPosX, netMove.desPosY);
-        Chessboard.Instance.MoveTo(oriPos, desPos);
+        Chessboard.Instance.MoveTo(oriPos, desPos, (SpecialMove)netMove.specialMove);
         Chessboard.Instance.UpdateTurn(netMove.turn);
     }
     public void OnShowResultRes(NetShowResult msg)
