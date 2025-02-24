@@ -1,6 +1,12 @@
 using TMPro;
 using UnityEngine;
 
+public enum CameraAngles
+{
+    White,
+    Black,
+    Menu,
+}
 public class GameMgr : MonoBehaviour
 {
     private static GameMgr _instance;
@@ -13,6 +19,7 @@ public class GameMgr : MonoBehaviour
     [SerializeField] private Server server;
     [SerializeField] private Client client;
     [SerializeField] private TMP_InputField ipAddress;
+    [SerializeField] private GameObject[] cameraAngles;
 
     private int yourTeam;
     private bool matchEnd = false;
@@ -72,6 +79,7 @@ public class GameMgr : MonoBehaviour
         {
             server.ShutDown();
             client.ShutDown();
+            yourTeam = (int)CameraAngles.Menu;
             Destroy(Chessboard.Instance.gameObject);
         }
         victoryScreen.SetActive(false);
@@ -100,6 +108,7 @@ public class GameMgr : MonoBehaviour
     {
         uiAnimatior.SetTrigger("GameStart");
         Instantiate(chessboard);
+        SwitchCameraAngle();
         matchEnd = false;
     }
     public void AssignTeam(int team)
@@ -148,7 +157,15 @@ public class GameMgr : MonoBehaviour
         Chessboard.Instance.ResetChessBoard();
         matchEnd = false;
     }
-
+    private void SwitchCameraAngle()
+    {
+        for(int i = 0; i < cameraAngles.Length; i++)
+        {
+            cameraAngles[i].SetActive(false);
+        }
+        Debug.LogError(yourTeam);
+        cameraAngles[yourTeam].SetActive(true);
+    }
     public void ExitGame()
     {
         Application.Quit();
