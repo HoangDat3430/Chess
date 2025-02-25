@@ -20,8 +20,8 @@ public class GameMgr : MonoBehaviour
     [SerializeField] private TMP_InputField ipAddress;
     [SerializeField] private GameObject[] cameraAngles;
 
-    private int yourTeam;
-    private bool matchEnd = false;
+    private int myTeam;
+    private bool freezed = false;
     private bool isLocalGame = false;
 
     public static GameMgr Instance
@@ -31,18 +31,18 @@ public class GameMgr : MonoBehaviour
             return _instance;
         }
     }
-    public int YourTeam
+    public int MyTeam
     {
         get
         {
-            return yourTeam;
+            return myTeam;
         }
     }
-    public bool MatchIsEnd
+    public bool Freezed
     {
         get
         {
-            return matchEnd;
+            return freezed;
         }
     }
     public bool IsLocalGame
@@ -58,8 +58,7 @@ public class GameMgr : MonoBehaviour
     }
     public void OnLocalGameButtonClick()
     {
-        server.Init();
-        client.Init(Server.ipAddress, Server.serverPort);
+        myTeam = 0;
         StartGame(true);
     }
     public void OnOnlineGameButtonClick()
@@ -78,31 +77,26 @@ public class GameMgr : MonoBehaviour
     }
     public void OnOnlineBackButtonClick()
     {
-        Debug.LogError(Chessboard.Instance != null);
-        if(Chessboard.Instance != null)
-        {
-            server.ShutDown();
-            client.ShutDown();
-            Destroy(Chessboard.Instance.gameObject);
-        }
+        ShutDownRelay();
         victoryScreen.SetActive(false);
         uiAnimatior.SetTrigger("GameMenu");
         SwitchCameraAngle(CameraAngles.Menu);
     }
     public void OnHostBackButtonClick()
     {
-        server.ShutDown();
-        client.ShutDown();
+        ShutDownRelay();
         uiAnimatior.SetTrigger("OnlineMenu");
     }
-    public void ShowPromoteUI()
+    public void ShowPromoteUI(int team)
     {
+        freezed = true;
         promotionScreen.SetActive(true);
+        promotionScreen.transform.Find("Waiting").gameObject.SetActive(team != myTeam);
+        promotionScreen.transform.Find("Chosing").gameObject.SetActive(team == myTeam);
     }
     public void ConfirmPromote(int type)
     {
-        Chessboard.Instance.Promote((ChessPieceType)type);
-        promotionScreen.SetActive(false);
+        PromoteReq(myTeam, type);
     }
     public void ResetGame()
     {
@@ -110,18 +104,25 @@ public class GameMgr : MonoBehaviour
     }
     public void StartGame(bool isLocal)
     {
-        //uiAnimatior.SetTrigger("GameStart");
+        uiAnimatior.SetTrigger("GameStart");
         isLocalGame = isLocal;
         Instantiate(chessboard);
-        SwitchCameraAngle((CameraAngles)yourTeam);
-        matchEnd = false;
+        SwitchCameraAngle((CameraAngles)myTeam);
+        freezed = false;
     }
     public void AssignTeam(int team)
     {
-        this.yourTeam = team;
+        this.myTeam = team;
     }
     public void MoveReq(int turn, ChessPiece cp, Vector2Int desPos, SpecialMove specialMove)
     {
+        if(isLocalGame)
+        {
+            Vector2Int oriPos = new Vector2Int(cp.x, cp.y);
+            Chessboard.Instance.MoveTo(oriPos, desPos, specialMove);
+            Chessboard.Instance.UpdateTurn(turn + 1);
+            return;
+        }
         NetMove netMove = new NetMove();
         netMove.turn = turn;
         netMove.oriPosX = cp.x;
@@ -131,8 +132,20 @@ public class GameMgr : MonoBehaviour
         netMove.specialMove = (int)specialMove;
         client.SendToServer(netMove);
     }
+    public void PromoteReq(int team, int type)
+    {
+        NetPromote netPromote = new NetPromote();
+        netPromote.team = team;
+        netPromote.type = type;
+        client.SendToServer(netPromote);
+    }
     public void ShowResultReq(int teamWin)
     {
+        if (isLocalGame)
+        {
+            ShowResult(teamWin);
+            return;
+        }
         NetShowResult netShowResult = new NetShowResult();
         netShowResult.teamWin = teamWin;
         client.SendToServer(netShowResult);
@@ -149,19 +162,22 @@ public class GameMgr : MonoBehaviour
         Chessboard.Instance.MoveTo(oriPos, desPos, (SpecialMove)netMove.specialMove);
         Chessboard.Instance.UpdateTurn(netMove.turn);
     }
+    public void OnPromoteRes(NetworkMessage msg)
+    {
+        NetPromote netPromote = msg as NetPromote;
+        freezed = false;
+        Chessboard.Instance.Promote(netPromote.team, (ChessPieceType)netPromote.type);
+        promotionScreen.SetActive(false);
+    }
     public void OnShowResultRes(NetShowResult msg)
     {
-        Debug.LogError(msg.teamWin);
-        victoryScreen.gameObject.SetActive(true);
-        victoryScreen.transform.GetChild(0).gameObject.SetActive(msg.teamWin == yourTeam);
-        victoryScreen.transform.GetChild(1).gameObject.SetActive(msg.teamWin != yourTeam);
-        matchEnd = true;
+        ShowResult(msg.teamWin);
     }
     public void OnRematchRes()
     {
         victoryScreen.SetActive(false);
         Chessboard.Instance.ResetChessBoard();
-        matchEnd = false;
+        freezed = false;
     }
     private void SwitchCameraAngle(CameraAngles angles)
     {
@@ -170,6 +186,22 @@ public class GameMgr : MonoBehaviour
             cameraAngles[i].SetActive(false);
         }
         cameraAngles[(int)angles].SetActive(true);
+    }
+    private void ShutDownRelay()
+    {
+        if (Chessboard.Instance != null)
+        {
+            server.ShutDown();
+            client.ShutDown();
+            Destroy(Chessboard.Instance.gameObject);
+        }
+    }
+    private void ShowResult(int teamWin)
+    {
+        victoryScreen.gameObject.SetActive(true);
+        victoryScreen.transform.GetChild(0).gameObject.SetActive(teamWin == myTeam);
+        victoryScreen.transform.GetChild(1).gameObject.SetActive(teamWin != myTeam);
+        freezed = true;
     }
     public void ExitGame()
     {

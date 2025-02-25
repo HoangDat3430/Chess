@@ -63,14 +63,14 @@ public class Chessboard : MonoBehaviour
         _instance = this;
         dangerZone[0] = new List<Vector2Int>();
         dangerZone[1] = new List<Vector2Int>();
-        assignedTeam = GameMgr.Instance.YourTeam;
+        assignedTeam = GameMgr.Instance.MyTeam;
         opponentTeam = assignedTeam == 0 ? 1 : 0;
         GenerateAllTiles(tileSize, TILE_COUNT_X, TILE_COUNT_Y);
         SpawnAllChessPieces();
     }
     private void Update()
     {
-        if(GameMgr.Instance.MatchIsEnd)
+        if(GameMgr.Instance.Freezed)
         {
             return;
         }
@@ -119,7 +119,6 @@ public class Chessboard : MonoBehaviour
             {
                 Vector2Int hitPosition = MousePositionToBoardIndex(info.transform.gameObject);
                 GameMgr.Instance.MoveReq(turn, curSelected, hitPosition, specialMove);
-                //MoveTo(hitPosition);
             }
         }
         // for test
@@ -245,31 +244,34 @@ public class Chessboard : MonoBehaviour
             case SpecialMove.Promotion:
                 if (lastMove[1].y == 0 || lastMove[1].y == 7)
                 {
-                    GameMgr.Instance.ShowPromoteUI();
+                    GameMgr.Instance.ShowPromoteUI(turn % 2 == assignedTeam ? assignedTeam : opponentTeam);
                 }
                 break;
         }
         specialMove = SpecialMove.None;
     }
-    public void Promote(ChessPieceType type)
+    public void Promote(int team, ChessPieceType type)
     {
         Vector2Int[] promotionPos = movesList[movesList.Count - 1];
         ChessPiece pawn = chessPieces[promotionPos[1].x, promotionPos[1].y];
         pawn.x = -1; pawn.y = -1;
         pawn.gameObject.SetActive(false);
-        ChessPiece newChess = SpawnSinglePiece(type, (turn - 1) % 2);
+        ChessPiece newChess = SpawnSinglePiece(type, team);
         chessPieces[promotionPos[1].x, promotionPos[1].y] = newChess;
         newChess.isPromoted = true;
         ChessPiecePositioning(promotionPos[1].x, promotionPos[1].y);
         newChess.GetAvailableMoves();
     }
     // Chesspiece positioning
-    public void MoveTo(Vector2Int oriPos, Vector2Int position, SpecialMove specialMove)
+    public void MoveTo(Vector2Int oriPos, Vector2Int position, SpecialMove specialMove = SpecialMove.None)
     {
         ClearHint();
         ChessPiece selected = chessPieces[oriPos.x, oriPos.y];
         ChessPiece cp = chessPieces[position.x, position.y];
-        this.specialMove = specialMove;
+        if(!GameMgr.Instance.IsLocalGame)
+        {
+            this.specialMove = specialMove;
+        }
         EliminateChessPiece(cp);
         movesList.Add(new Vector2Int[] { new Vector2Int(selected.x, selected.y), position });
         chessPieces[position.x, position.y] = chessPieces[selected.x, selected.y];

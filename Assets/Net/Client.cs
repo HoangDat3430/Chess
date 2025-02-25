@@ -107,6 +107,10 @@ public class Client : MonoBehaviour
     {
         GameMgr.Instance.OnMoveRes(msg);
     }
+    private void OnPromoteRes(NetworkMessage msg)
+    {
+        GameMgr.Instance.OnPromoteRes(msg);
+    }
     private void OnShowResultRes(NetworkMessage msg)
     {
         GameMgr.Instance.OnShowResultRes((NetShowResult)msg);
@@ -121,6 +125,7 @@ public class Client : MonoBehaviour
         NetUtility.C_WELCOME += OnWelcomeRes;
         NetUtility.C_GAME_START += OnGameStartRes;
         NetUtility.C_MOVE += OnMoveRes;
+        NetUtility.C_PROMOTE += OnPromoteRes;
         NetUtility.C_RESULT += OnShowResultRes;
         NetUtility.C_REMATCH += OnRematchRes;
         connectionDropped += GameMgr.Instance.OnOnlineBackButtonClick;
@@ -131,7 +136,9 @@ public class Client : MonoBehaviour
         NetUtility.C_WELCOME -= OnWelcomeRes;
         NetUtility.C_GAME_START -= OnGameStartRes;
         NetUtility.C_MOVE -= OnMoveRes;
+        NetUtility.C_PROMOTE -= OnPromoteRes;
         NetUtility.C_RESULT -= OnShowResultRes;
+        NetUtility.C_REMATCH -= OnRematchRes;
         connectionDropped -= GameMgr.Instance.OnOnlineBackButtonClick;
     }
 }

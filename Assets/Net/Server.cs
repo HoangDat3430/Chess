@@ -148,6 +148,10 @@ public class Server : MonoBehaviour
     {
         BroadCast(msg);
     }
+    private void OnPromoteReq(NetworkMessage msg, NetworkConnection cnn)
+    {
+        BroadCast(msg);
+    }
     private void OnShowResultReq(NetworkMessage msg, NetworkConnection cnn)
     {
         BroadCast(msg);
@@ -164,13 +168,15 @@ public class Server : MonoBehaviour
     private void RegisterToEvent()
     {
         NetUtility.S_MOVE += OnMoveReq;
+        NetUtility.S_PROMOTE += OnPromoteReq;
         NetUtility.S_RESULT += OnShowResultReq;
         NetUtility.S_REMATCH += OnRematchReq;
     }
     private void UnRegisterToEvent()
     {
         NetUtility.S_MOVE -= OnMoveReq;
-        NetUtility.S_RESULT += OnShowResultReq;
+        NetUtility.S_PROMOTE -= OnPromoteReq;
+        NetUtility.S_RESULT -= OnShowResultReq;
         NetUtility.S_REMATCH -= OnRematchReq;
     }
 }

@@ -8,6 +8,7 @@ public enum OpCode
     Welcome,
     GameStart,
     Move,
+    Promote,
     Result,
     Rematch
 }
@@ -17,12 +18,14 @@ public static class NetUtility
     public static Action<NetworkMessage> C_WELCOME;
     public static Action<NetworkMessage> C_GAME_START;
     public static Action<NetworkMessage> C_MOVE;
+    public static Action<NetworkMessage> C_PROMOTE;
     public static Action<NetworkMessage> C_RESULT;
     public static Action<NetworkMessage> C_REMATCH;
     public static Action<NetworkMessage, NetworkConnection> S_KEEP_ALIVE;
     public static Action<NetworkMessage, NetworkConnection> S_WELCOME;
     public static Action<NetworkMessage, NetworkConnection> S_GAME_START;
     public static Action<NetworkMessage, NetworkConnection> S_MOVE;
+    public static Action<NetworkMessage, NetworkConnection> S_PROMOTE;
     public static Action<NetworkMessage, NetworkConnection> S_RESULT;
     public static Action<NetworkMessage, NetworkConnection> S_REMATCH;
 
@@ -43,6 +46,9 @@ public static class NetUtility
                 break;
             case OpCode.Move:
                 msg = new NetMove(reader);
+                break;
+            case OpCode.Promote:
+                msg = new NetPromote(reader);
                 break;
             case OpCode.Result:
                 msg = new NetShowResult(reader);
