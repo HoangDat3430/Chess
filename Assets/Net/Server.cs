@@ -23,13 +23,14 @@ public class Server : MonoBehaviour
     {
         Instance = this;
     }
-    public void Init()
+    public void Init(ushort port)
     {
         driver = NetworkDriver.Create();
-        NetworkEndpoint endpoint = NetworkEndpoint.AnyIpv4.WithPort(serverPort);
+        NetworkEndpoint endpoint = NetworkEndpoint.AnyIpv4;
+        endpoint.Port = port;
         if (driver.Bind(endpoint) != 0)
         {
-            Debug.Log("Failed to bind to port " + serverPort);
+            Debug.Log("Failed to bind to port " + endpoint.Port);
         }
         else
         {
@@ -38,7 +39,7 @@ public class Server : MonoBehaviour
         connections = new NativeList<NetworkConnection>(2, Allocator.Persistent);
         isActive = true;
         RegisterToEvent();
-        Debug.Log("Server started on port " + serverPort); 
+        Debug.Log("Server started on port " + endpoint.Port); 
     }
     public void ShutDown()
     {
@@ -171,6 +172,7 @@ public class Server : MonoBehaviour
         NetUtility.S_PROMOTE += OnPromoteReq;
         NetUtility.S_RESULT += OnShowResultReq;
         NetUtility.S_REMATCH += OnRematchReq;
+        connectionDropped += GameMgr.Instance.OnOnlineBackButtonClick;
     }
     private void UnRegisterToEvent()
     {
@@ -178,5 +180,6 @@ public class Server : MonoBehaviour
         NetUtility.S_PROMOTE -= OnPromoteReq;
         NetUtility.S_RESULT -= OnShowResultReq;
         NetUtility.S_REMATCH -= OnRematchReq;
+        connectionDropped += GameMgr.Instance.OnOnlineBackButtonClick;
     }
 }

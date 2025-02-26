@@ -18,7 +18,7 @@ public class Client : MonoBehaviour
     }
     public void Init(string ip, ushort port)
     {
-        if (ip == string.Empty) ip = Server.ipAddress;
+        //if (ip == string.Empty) ip = Server.ipAddress;
         driver = NetworkDriver.Create();
         NetworkEndpoint endpoint = NetworkEndpoint.Parse(ip, port);
         connection = driver.Connect(endpoint);

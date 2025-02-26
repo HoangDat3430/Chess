@@ -67,12 +67,12 @@ public class GameMgr : MonoBehaviour
     }
     public void OnConnectButtonClick()
     {
-        client.Init(ipAddress.text, Server.serverPort);
+        client.Init(ipAddress.text, 7777);
     }
     public void OnHostButtonClick()
     {
-        server.Init();
-        client.Init(Server.ipAddress, Server.serverPort);
+        server.Init(7777);
+        client.Init("127.0.0.1", 7777);
         uiAnimatior.SetTrigger("HostMenu");
     }
     public void OnOnlineBackButtonClick()
@@ -106,6 +106,10 @@ public class GameMgr : MonoBehaviour
     {
         uiAnimatior.SetTrigger("GameStart");
         isLocalGame = isLocal;
+        if (Chessboard.Instance != null)
+        {
+            Destroy(Chessboard.Instance.gameObject);
+        }
         Instantiate(chessboard);
         SwitchCameraAngle((CameraAngles)myTeam);
         freezed = false;
@@ -191,10 +195,10 @@ public class GameMgr : MonoBehaviour
     {
         if (Chessboard.Instance != null)
         {
-            server.ShutDown();
-            client.ShutDown();
             Destroy(Chessboard.Instance.gameObject);
         }
+        server.ShutDown();
+        client.ShutDown();
     }
     private void ShowResult(int teamWin)
     {
