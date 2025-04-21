@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.43667555, g: 0.48427176, b: 0.5645241, a: 1}
+  m_IndirectSpecularColor: {r: 0.4366757, g: 0.48427194, b: 0.5645252, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -168,12 +168,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   hexEdge: 1
-  mapWidth: 2
-  mapHeight: 4
-  normalHexMat: {fileID: 2100000, guid: 400d1f6eaea910d4fa3f075543c7d685, type: 2}
-  startPosMat: {fileID: 2100000, guid: bfcb0b1a94c8e63448f5d4af2354861a, type: 2}
+  mapWidth: 16
+  mapHeight: 16
+  normalHexMat: {fileID: 2100000, guid: a1a53397417763b439296e388d6a3c67, type: 2}
+  startPosMat: {fileID: 2100000, guid: 400d1f6eaea910d4fa3f075543c7d685, type: 2}
   desiredMat: {fileID: 2100000, guid: 7533c8c032638b94eacc1a2d3ea7c57a, type: 2}
-  goalMat: {fileID: 2100000, guid: a1a53397417763b439296e388d6a3c67, type: 2}
+  goalMat: {fileID: 2100000, guid: bfcb0b1a94c8e63448f5d4af2354861a, type: 2}
   type: 0
 --- !u!1 &918919209
 GameObject:
@@ -261,7 +261,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 918919209}
   m_LocalRotation: {x: 0.7071068, y: 0, z: 0, w: 0.7071068}
-  m_LocalPosition: {x: 5, y: 10, z: 0}
+  m_LocalPosition: {x: 15, y: 30, z: 10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
