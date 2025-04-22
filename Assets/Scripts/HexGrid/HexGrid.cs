@@ -1,8 +1,9 @@
 using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 
-public class HexGrid : MonoBehaviour
+public class HexGrid : MonoBehaviour, IGrid
 {
     public static HexGrid Instance { get; private set; }
     public enum HexType
@@ -22,31 +23,30 @@ public class HexGrid : MonoBehaviour
     public float Width { get { return Mathf.Sqrt(3) * hexEdge; } }
     public float Height { get { return 2 * hexEdge; } }
 
-    private GameObject[,] hexMap;
-    private GameObject startPos;
-    private GameObject goalPos;
-
-    public GameObject StartPos
+    private Node[,] hexMap;
+    private Node startPos;
+    private Node goalPos;
+    public Node StartPos
     {
         get { return startPos; }
         set
         {
-            if(startPos != value)
+            if (startPos != value)
             {
-                if(startPos != null)
+                if (startPos != null)
                 {
-                    startPos.GetComponent<MeshRenderer>().material = normalHexMat;
+                    startPos.NodeGO.GetComponent<MeshRenderer>().material = normalHexMat;
                 }
                 startPos = value;
-                startPos.GetComponent<MeshRenderer>().material = startPosMat;
-                if(goalPos != null && goalPos != startPos)
+                startPos.NodeGO.GetComponent<MeshRenderer>().material = startPosMat;
+                if (goalPos != null && goalPos != startPos)
                 {
-                    PathFinding.AStar(startPos, goalPos, hexMap);
+                    PathFinding.AStar(startPos, goalPos, this);
                 }
             }
         }
     }
-    public GameObject GoalPos
+    public Node GoalPos
     {
         get { return goalPos; }
         set
@@ -55,22 +55,23 @@ public class HexGrid : MonoBehaviour
             {
                 if (goalPos != null)
                 {
-                    goalPos.GetComponent<MeshRenderer>().material = normalHexMat;
+                    goalPos.NodeGO.GetComponent<MeshRenderer>().material = normalHexMat;
                 }
                 goalPos = value;
-                goalPos.GetComponent<MeshRenderer>().material = goalMat;
+                goalPos.NodeGO.GetComponent<MeshRenderer>().material = goalMat;
             }
-            if(startPos != goalPos)
+            if (startPos != goalPos)
             {
-                PathFinding.AStar(startPos, goalPos, hexMap);
+                PathFinding.AStar(startPos, goalPos, this);
             }
         }
     }
     private void Awake()
     {
         Instance = this;
-        hexMap = new GameObject[mapWidth, mapHeight];
-        GenHexMap();
+        hexMap = new Node[mapWidth, mapHeight];
+        GenGrid();
+        GetNeighborsForAllGrid();
     }
     private void Update()
     {
@@ -82,29 +83,41 @@ public class HexGrid : MonoBehaviour
             Ray hit = Camera.main.ScreenPointToRay(Input.mousePosition);
             if (Physics.Raycast(hit, out hitInfo, 100))
             {
-                if(isSetGoalPos)
+                Node hitNode = GetNodeByGameObject(hitInfo.collider.gameObject);
+                if (isSetGoalPos)
                 {
-                    GoalPos = hitInfo.collider.gameObject;
+                    GoalPos = hitNode;
                 }
                 else
                 {
-                    StartPos = hitInfo.collider.gameObject;
+                    StartPos = hitNode;
                 }
             }
         }
     }
-    private void GenHexMap()
+    public Node GetNodeByGameObject(GameObject go)
+    {
+        foreach (var node in hexMap)
+        {
+            if (node.NodeGO == go)
+            {
+                return node;
+            }
+        }
+        return null;
+    }
+    public void GenGrid()
     {
         for (int y = 0; y < mapHeight; y++)
         {
             for (int x = 0; x < mapWidth; x++)
             {
-                hexMap[x, y] = GenSingleHecGrid(x, y);
+                hexMap[x, y] = GenSingleNode(x, y);
             }
         }
         StartPos = hexMap[0, 0];
     }
-    private GameObject GenSingleHecGrid(int x, int y)
+    public Node GenSingleNode(int x, int y)
     {
         GameObject newHex = new GameObject(string.Format("X:{0}, Y:{1}", x, y));
         newHex.transform.SetParent(transform);
@@ -127,7 +140,7 @@ public class HexGrid : MonoBehaviour
         MeshCollider meshCollider = newHex.AddComponent<MeshCollider>();
         meshCollider.sharedMesh = mesh;
         meshCollider.convex = true;
-        return newHex;
+        return new Node(newHex, new Vector2Int(x, y));
     }
     private void SetVertices(ref Vector3[] vertices, int x, int y)
     {
@@ -155,4 +168,41 @@ public class HexGrid : MonoBehaviour
         centerY += .5f;
         return new Vector3(centerX, 0, centerY);
     }
+    public Node[,] GetGridMap()
+    {
+        return hexMap;
+    }
+    private void GetNeighborsForAllGrid()
+    {
+        foreach (Node node in hexMap)
+        {
+            node.neighbors = GetNeighbors(node.Position);
+        }
+    }
+    public List<Node> GetNeighbors(Vector2Int pos)
+    {
+        List<Node> neighbors = new List<Node>();
+        Vector2Int[] directions = new Vector2Int[]
+        {
+            new Vector2Int(1, 0),
+            new Vector2Int(1, -1),
+            new Vector2Int(0, -1),
+            new Vector2Int(-1, 0),
+            new Vector2Int(-1, 1),
+            new Vector2Int(0, 1),
+        };
+        foreach (var dir in directions)
+        {
+            Vector2Int relatedPos = dir + pos;
+            foreach (var node in hexMap)
+            {
+                if (relatedPos == node.Position)
+                {
+                    neighbors.Add(node);
+                }
+            }
+        }
+        return neighbors;
+    }
+
 }

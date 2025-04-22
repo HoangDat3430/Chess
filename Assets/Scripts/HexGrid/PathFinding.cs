@@ -1,35 +1,39 @@
-using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
+using UnityEditor.Rendering;
 using UnityEngine;
 
 public static class PathFinding
 {
     public static List<Node> resultPath = new List<Node>();
-    public static List<Node> frontierNodes = new List<Node>();
+    public static List<Node> openNodes = new List<Node>();
     public static List<Node> visitedNodes = new List<Node>();
     public static Node startNode;
     public static Node goalNode;
     public static Node currentNode;
-    
-    public static bool AStar(GameObject start, GameObject end, GameObject[,] gridMap)
+
+    public static List<Node> AStar(Node start, Node end, IGrid grid)
     {
-        if(startNode == null)
+        startNode = start;
+        goalNode = end;
+        resultPath.Clear();
+        visitedNodes.Clear();
+
+        currentNode = startNode;
+        while (currentNode != goalNode)
         {
-            startNode = new Node(start);
+
         }
-        else
+        return resultPath;
+    }
+    public static void GetBestNode(Node node)
+    {
+        foreach (var neighbor in node.neighbors)
         {
-            startNode.NodeGO = start;
+
         }
-        if (goalNode == null)
-        {
-            goalNode = new Node(end);
-        }
-        else
-        {
-            goalNode.NodeGO = end;
-        }
-        return false;
+    }
+    public static float Heuristic(Vector2Int from, Vector2Int to)
+    {
+        return Vector2Int.Distance(from, to);
     }
 }
