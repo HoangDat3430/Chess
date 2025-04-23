@@ -28,6 +28,7 @@ public static class PathFinding
         while (openNodes.Count > 0)
         {
             currentNode = openNodes.OrderBy(n => n.fCost).ThenBy(n => n.hCost).First();
+            Debug.LogError("Take: " + currentNode.Position, currentNode.NodeGO);
             if (currentNode == end)
             {
                 TrackingBackPath(start, end);
@@ -35,6 +36,7 @@ public static class PathFinding
             }
             openNodes.Remove(currentNode);
             visitedNodes.Add(currentNode);
+            Debug.LogError("Neighbours: " + currentNode.neighbors.Count, currentNode.NodeGO);
             foreach (var neighbor in currentNode.neighbors)
             {
                 if (visitedNodes.Contains(neighbor))
@@ -42,6 +44,7 @@ public static class PathFinding
                     continue;
                 }
                 float estimatedCost = currentNode.gCost + neighbor.mCost;
+                Debug.LogError(neighbor.Position + ": " + estimatedCost + " --- " + neighbor.gCost, neighbor.NodeGO);
                 if (!openNodes.Contains(neighbor) || estimatedCost < neighbor.gCost)
                 {
                     neighbor.gCost = estimatedCost;
@@ -49,6 +52,7 @@ public static class PathFinding
                     neighbor.prevNode = currentNode;
                     if (!openNodes.Contains(neighbor))
                     {
+                        Debug.LogError("Add: " + neighbor.Position, neighbor.NodeGO);
                         openNodes.Add(neighbor);
                     }
                 }
@@ -65,13 +69,10 @@ public static class PathFinding
             cur = cur.prevNode;
         }
         resultPath.Reverse();
-        Debug.LogError(resultPath.Count);
         return resultPath;
     }
     public static float Heuristic(Node from, Node to)
     {
-        Vector3 a = from.Position;
-        Vector3 b = to.Position;
-        return Mathf.Abs(a.x - b.x) + Mathf.Abs(a.z - b.z);
+        return Vector2Int.Distance(from.Position, to.Position);
     }
 }

@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 
 
@@ -14,10 +15,10 @@ public class HexGrid : MonoBehaviour, IGrid
     [SerializeField] private int hexEdge = 1;
     [SerializeField] private int mapWidth = 2;
     [SerializeField] private int mapHeight = 4;
-    [SerializeField] private Material normalHexMat;
+    [SerializeField] private Material normalMat;
     [SerializeField] private Material startPosMat;
     [SerializeField] private Material desiredMat;
-    [SerializeField] private Material goalMat;
+    [SerializeField] private Material goalPosMat;
     [SerializeField] private HexType type;
 
     public float Width { get { return Mathf.Sqrt(3) * hexEdge; } }
@@ -31,19 +32,18 @@ public class HexGrid : MonoBehaviour, IGrid
         get { return startPos; }
         set
         {
-            if (startPos != value)
+            if (startPos != value && value != goalPos)
             {
                 if (startPos != null)
                 {
-                    startPos.NodeGO.GetComponent<MeshRenderer>().material = normalHexMat;
+                    startPos.NodeGO.GetComponent<MeshRenderer>().material = normalMat; //reset the previous start position
                 }
                 startPos = value;
-                startPos.NodeGO.GetComponent<MeshRenderer>().material = startPosMat;
                 if (goalPos != null && goalPos != startPos)
                 {
                     foreach (var node in PathFinding.resultPath)
                     {
-                        node.NodeGO.GetComponent<MeshRenderer>().material = normalHexMat;
+                        node.NodeGO.GetComponent<MeshRenderer>().material = normalMat;
                     }
                     PathFinding.AStar(startPos, goalPos);
                     foreach (Node node in PathFinding.resultPath)
@@ -51,6 +51,7 @@ public class HexGrid : MonoBehaviour, IGrid
                         node.NodeGO.GetComponent<MeshRenderer>().material = desiredMat;
                     }
                 }
+                startPos.NodeGO.GetComponent<MeshRenderer>().material = startPosMat; // set color after previous result path cleared
             }
         }
     }
@@ -59,19 +60,18 @@ public class HexGrid : MonoBehaviour, IGrid
         get { return goalPos; }
         set
         {
-            if (goalPos != value)
+            if (goalPos != value && value != startPos)
             {
                 if (goalPos != null)
                 {
-                    goalPos.NodeGO.GetComponent<MeshRenderer>().material = normalHexMat;
+                    goalPos.NodeGO.GetComponent<MeshRenderer>().material = normalMat; // reset the previous goal position
                 }
                 goalPos = value;
-                goalPos.NodeGO.GetComponent<MeshRenderer>().material = goalMat;
-                if (startPos != null && startPos != goalPos)
+                if (startPos != null)
                 {
                     foreach (var node in PathFinding.resultPath)
                     {
-                        node.NodeGO.GetComponent<MeshRenderer>().material = normalHexMat;
+                        node.NodeGO.GetComponent<MeshRenderer>().material = normalMat;
                     }
                     PathFinding.AStar(startPos, goalPos);
                     foreach (Node node in PathFinding.resultPath)
@@ -79,8 +79,9 @@ public class HexGrid : MonoBehaviour, IGrid
                         node.NodeGO.GetComponent<MeshRenderer>().material = desiredMat;
                     }
                 }
+                goalPos.NodeGO.GetComponent<MeshRenderer>().material = goalPosMat; // set color after previous result path cleared
             }
-            
+
         }
     }
     private void Awake()
@@ -141,7 +142,7 @@ public class HexGrid : MonoBehaviour, IGrid
 
         Mesh mesh = new Mesh();
         newHex.AddComponent<MeshFilter>().mesh = mesh;
-        newHex.AddComponent<MeshRenderer>().material = normalHexMat;
+        newHex.AddComponent<MeshRenderer>().material = normalMat;
 
         Vector3[] vertices = new Vector3[7];
         SetVertices(ref vertices, x, y);
@@ -157,7 +158,7 @@ public class HexGrid : MonoBehaviour, IGrid
         MeshCollider meshCollider = newHex.AddComponent<MeshCollider>();
         meshCollider.sharedMesh = mesh;
         meshCollider.convex = true;
-        return new Node(newHex, vertices[0]);
+        return new Node(newHex, new Vector2Int(x, y));
     }
     private void SetVertices(ref Vector3[] vertices, int x, int y)
     {
@@ -193,26 +194,27 @@ public class HexGrid : MonoBehaviour, IGrid
         {
             for (int y = 0; y < mapHeight; y++)
             {
-                hexMap[x,y].neighbors = GetNeighbors(new Vector2Int(x, y));
+                hexMap[x,y].neighbors = GetNeighbors(hexMap[x, y]);
             }
         }
     }
-    private List<Node> GetNeighbors(Vector2Int pos)
+    private List<Node> GetNeighbors(Node node)
     {
         List<Node> neighbors = new List<Node>();
+        int diff = node.Position.y % 2 == 0 ? -1 : 1;
         Vector2Int[] directions = new Vector2Int[]
         {
-            new Vector2Int(1, 0),
-            new Vector2Int(1, -1),
-            new Vector2Int(0, -1),
-            new Vector2Int(-1, 0),
-            new Vector2Int(-1, 1),
             new Vector2Int(0, 1),
+            new Vector2Int(diff, 1),
+            new Vector2Int(-1, 0),
+            new Vector2Int(1, 0),
+            new Vector2Int(0, -1),
+            new Vector2Int(diff, -1),
         };
         foreach (var dir in directions)
         {
-            Vector2Int relatedPos = dir + pos;
-            if (relatedPos.x > 0 && relatedPos.y > 0 && relatedPos.x < mapWidth && relatedPos.y < mapHeight)
+            Vector2Int relatedPos = dir + node.Position;
+            if (relatedPos.x >= 0 && relatedPos.y >= 0 && relatedPos.x < mapWidth && relatedPos.y < mapHeight)
             {
                 neighbors.Add(hexMap[relatedPos.x, relatedPos.y]);
             }
