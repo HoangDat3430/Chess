@@ -5,8 +5,8 @@ using UnityEngine;
 public static class PathFinding
 {
     public static List<Node> resultPath = new List<Node>();
-    public static List<Node> openNodes = new List<Node>();
-    public static List<Node> visitedNodes = new List<Node>();
+    private static List<Node> openNodes = new List<Node>();
+    private static List<Node> visitedNodes = new List<Node>();
     public static List<Node> Result
     {
         get
@@ -19,6 +19,7 @@ public static class PathFinding
     {
         start.gCost = 0;
         start.hCost = Heuristic(start, end);
+
         resultPath.Clear();
         openNodes.Clear();
         visitedNodes.Clear();
@@ -28,7 +29,7 @@ public static class PathFinding
         while (openNodes.Count > 0)
         {
             currentNode = openNodes.OrderBy(n => n.fCost).ThenBy(n => n.hCost).First();
-            Debug.LogError("Take: " + currentNode.Position, currentNode.NodeGO);
+            //Debug.LogError("Take: " + currentNode.Position, currentNode.NodeGO);
             if (currentNode == end)
             {
                 TrackingBackPath(start, end);
@@ -36,7 +37,7 @@ public static class PathFinding
             }
             openNodes.Remove(currentNode);
             visitedNodes.Add(currentNode);
-            Debug.LogError("Neighbours: " + currentNode.neighbors.Count, currentNode.NodeGO);
+            //Debug.LogError("Neighbours: " + currentNode.neighbors.Count, currentNode.NodeGO);
             foreach (var neighbor in currentNode.neighbors)
             {
                 if (visitedNodes.Contains(neighbor))
@@ -44,7 +45,6 @@ public static class PathFinding
                     continue;
                 }
                 float estimatedCost = currentNode.gCost + neighbor.mCost;
-                Debug.LogError(neighbor.Position + ": " + estimatedCost + " --- " + neighbor.gCost, neighbor.NodeGO);
                 if (!openNodes.Contains(neighbor) || estimatedCost < neighbor.gCost)
                 {
                     neighbor.gCost = estimatedCost;
@@ -52,7 +52,7 @@ public static class PathFinding
                     neighbor.prevNode = currentNode;
                     if (!openNodes.Contains(neighbor))
                     {
-                        Debug.LogError("Add: " + neighbor.Position, neighbor.NodeGO);
+                        //Debug.LogError("Add: " + neighbor.Position, neighbor.NodeGO);
                         openNodes.Add(neighbor);
                     }
                 }

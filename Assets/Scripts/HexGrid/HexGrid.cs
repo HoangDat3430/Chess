@@ -19,7 +19,7 @@ public class HexGrid : MonoBehaviour, IGrid
     [SerializeField] private Material startPosMat;
     [SerializeField] private Material desiredMat;
     [SerializeField] private Material goalPosMat;
-    [SerializeField] private HexType type;
+    [SerializeField] private HexType hexType;
 
     public float Width { get { return Mathf.Sqrt(3) * hexEdge; } }
     public float Height { get { return 2 * hexEdge; } }
@@ -164,7 +164,7 @@ public class HexGrid : MonoBehaviour, IGrid
     {
         Vector3 center = GetCenter(x, y);
         vertices[0] = center;
-        int angleOffset = type == HexType.FlatTop ? 0 : 30;
+        int angleOffset = hexType == HexType.FlatTop ? 0 : 30;
         for (int i = 1; i < 7; i++)
         {
             float angleDeg = i * 60 + angleOffset;
@@ -176,12 +176,8 @@ public class HexGrid : MonoBehaviour, IGrid
     }
     public Vector3 GetCenter(int x, int y)
     {
-        float centerX = type == HexType.FlatTop ? x * (Height + hexEdge) : x * Width;
-        float centerY = type == HexType.FlatTop ? y * Width / 2 : y * (Height / 2 + (float)hexEdge / 2);
-        if (y % 2 == 1)
-        {
-            centerX += type == HexType.FlatTop ? Height * (3f / 4) : (float)Width / 2;
-        }
+        float centerX = hexType == HexType.FlatTop ? x * (Height / 2 + (float)hexEdge / 2) : x * Width + (y % 2 == 0 ? 0 : Width / 2);
+        float centerY = hexType == HexType.FlatTop ? y * Width + (x % 2 == 0 ? 0 : Width / 2) : y * (Height / 2 + (float)hexEdge / 2);
         return new Vector3(centerX, 0, centerY);
     }
     public Node[,] GetGridMap()
@@ -198,11 +194,10 @@ public class HexGrid : MonoBehaviour, IGrid
             }
         }
     }
-    private List<Node> GetNeighbors(Node node)
+    private Vector2Int[] GetNeighborDir(Node node)
     {
-        List<Node> neighbors = new List<Node>();
-        int diff = node.Position.y % 2 == 0 ? -1 : 1;
-        Vector2Int[] directions = new Vector2Int[]
+        int diff = (hexType == HexType.FlatTop ?node.Position.x : node.Position.y) % 2 == 0 ? -1 : 1;
+        return new Vector2Int[]
         {
             new Vector2Int(0, 1),
             new Vector2Int(diff, 1),
@@ -211,9 +206,14 @@ public class HexGrid : MonoBehaviour, IGrid
             new Vector2Int(0, -1),
             new Vector2Int(diff, -1),
         };
-        foreach (var dir in directions)
+    }
+    private List<Node> GetNeighbors(Node node)
+    {
+        List<Node> neighbors = new List<Node>();
+        
+        foreach (var dir in GetNeighborDir(node))
         {
-            Vector2Int relatedPos = dir + node.Position;
+            Vector2Int relatedPos = (hexType == HexType.PointyTop ? dir : new Vector2Int(dir.y, dir.x)) + node.Position; // rotate the direction
             if (relatedPos.x >= 0 && relatedPos.y >= 0 && relatedPos.x < mapWidth && relatedPos.y < mapHeight)
             {
                 neighbors.Add(hexMap[relatedPos.x, relatedPos.y]);
