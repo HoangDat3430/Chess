@@ -1,4 +1,4 @@
-using UnityEngine;
+﻿using UnityEngine;
 
 public enum GridType
     {
@@ -12,20 +12,10 @@ public class GridMgr : MonoBehaviour
 
     [SerializeField] public GridType gridType = GridType.HexagonDir;
     [SerializeReference] public GridBaseData gridData;
+
     private IGrid _curGrid;
     private IGridFactory _gridFactory;
 
-    public GridType GridType
-    {
-        get { return gridType; }
-        set
-        {
-            if (gridType != value)
-            {
-                gridType = value;
-            }
-        }
-    }
     private void Awake()
     {
         Instance = this;
@@ -34,7 +24,7 @@ public class GridMgr : MonoBehaviour
     }
     private void Start()
     {
-        _curGrid.Init();
+        _curGrid.Init(gridData);
     }
 
     private void Update()
@@ -58,5 +48,31 @@ public class GridMgr : MonoBehaviour
                 }
             }
         }
+    }
+    private void OnValidate()
+    {
+#if UNITY_EDITOR
+        switch (gridType)
+        {
+            case GridType.SquareDir:
+                if (gridData == null || gridData.GetType() != typeof(SquareGridData))
+                {
+                    gridData = new SquareGridData();
+                }
+                break;
+            case GridType.HexagonDir:
+                if (gridData == null || gridData.GetType() != typeof(HexGridData))
+                {
+                    gridData = new HexGridData();
+                }
+                break;
+            case GridType.OctagonDir:
+                break;
+            default:
+                break;
+        }
+
+        UnityEditor.EditorUtility.SetDirty(this); // đảm bảo Inspector cập nhật
+#endif
     }
 }

@@ -13,12 +13,9 @@ public class HexGrid : IGrid
     private Node startPos;
     private Node goalPos;
 
-    public HexGrid()
+    public void Init(GridBaseData data)
     {
-        gridData = new HexGridData();
-    }
-    public void Init()
-    {
+        gridData = data as HexGridData;
         GenGrid();
         SetNeighborsForAllGrid();
     }

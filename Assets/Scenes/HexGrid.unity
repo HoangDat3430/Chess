@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.43667555, g: 0.48427176, b: 0.5645241, a: 1}
+  m_IndirectSpecularColor: {r: 0.4366757, g: 0.48427194, b: 0.5645252, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -167,23 +167,23 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b08e60f3cdd504a43aa8689d98abba97, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _gridType: 1
-  _gridData:
-    rid: 5314188739145891842
+  gridType: 1
+  gridData:
+    rid: 8512687860992966656
   references:
     version: 2
     RefIds:
-    - rid: 5314188739145891842
+    - rid: 8512687860992966656
       type: {class: HexGridData, ns: , asm: Assembly-CSharp}
       data:
         mapWidth: 16
         mapHeight: 16
-        normalMat: {fileID: 0}
-        startPosMat: {fileID: 0}
-        desiredMat: {fileID: 0}
-        goalPosMat: {fileID: 0}
+        normalMat: {fileID: 2100000, guid: a1a53397417763b439296e388d6a3c67, type: 2}
+        startPosMat: {fileID: 2100000, guid: 400d1f6eaea910d4fa3f075543c7d685, type: 2}
+        desiredMat: {fileID: 2100000, guid: 7533c8c032638b94eacc1a2d3ea7c57a, type: 2}
+        goalPosMat: {fileID: 2100000, guid: bfcb0b1a94c8e63448f5d4af2354861a, type: 2}
         hexEdge: 1
-        hexType: 0
+        hexType: 1
 --- !u!1 &918919209
 GameObject:
   m_ObjectHideFlags: 0
