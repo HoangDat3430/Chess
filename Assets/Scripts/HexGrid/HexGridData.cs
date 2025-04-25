@@ -6,7 +6,5 @@ public enum HexType
 }
 [Serializable] public class HexGridData : GridBaseData
 {
-    public int hexEdge = 1;
-
     public HexType hexType;
 }

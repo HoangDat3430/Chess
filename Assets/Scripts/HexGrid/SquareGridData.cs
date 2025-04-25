@@ -3,7 +3,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[Serializable] public class SquareGridData : GridBaseData
+[Serializable]
+public class SquareGridData : GridBaseData
 {
-    public int squareEdge = 1;
+    public bool isEightDir = false;
 }

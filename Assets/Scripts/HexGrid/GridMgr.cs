@@ -1,18 +1,19 @@
-﻿using UnityEngine;
+﻿using System;
+using System.Collections.Generic;
+using UnityEngine;
 
 public enum GridType
     {
-        SquareDir,
-        HexagonDir,
-        OctagonDir
+        Square,
+        Hexagon,
+        Symetrics
     }
 public class GridMgr : MonoBehaviour
 {
     public static GridMgr Instance { get; private set; }
 
-    [SerializeField] public GridType gridType = GridType.HexagonDir;
+    [SerializeField] public GridType gridType = GridType.Hexagon;
     [SerializeReference] public GridBaseData gridData;
-
     private IGrid _curGrid;
     private IGridFactory _gridFactory;
 
@@ -48,31 +49,5 @@ public class GridMgr : MonoBehaviour
                 }
             }
         }
-    }
-    private void OnValidate()
-    {
-#if UNITY_EDITOR
-        switch (gridType)
-        {
-            case GridType.SquareDir:
-                if (gridData == null || gridData.GetType() != typeof(SquareGridData))
-                {
-                    gridData = new SquareGridData();
-                }
-                break;
-            case GridType.HexagonDir:
-                if (gridData == null || gridData.GetType() != typeof(HexGridData))
-                {
-                    gridData = new HexGridData();
-                }
-                break;
-            case GridType.OctagonDir:
-                break;
-            default:
-                break;
-        }
-
-        UnityEditor.EditorUtility.SetDirty(this); // đảm bảo Inspector cập nhật
-#endif
     }
 }

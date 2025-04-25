@@ -7,5 +7,4 @@ public interface IGrid
     public void Init(GridBaseData data);
     public Vector3 GetCenter(int x, int y);
     public Node GetNodeByGameObject(GameObject go);
-    public void SetNeighborsForAllGrid();
 }
